@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>あさたんたんゲーム オンライン</title>
+<!-- P2P通信ライブラリ（オンライン対戦に使用。CPU対戦はネット不要） -->
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<style>
+  :root{
+    --bg:#fff8ee; --card:#ffffff; --ink:#3a2e22; --sub:#8a7a66;
+    --accent:#e8873b; --accent-d:#c96f28;
+    --time:#3f7bd6; --time-bg:#eaf1fc;
+    --carb:#e0a52e; --carb-bg:#fdf4dd;
+    --protein:#3fa06a; --protein-bg:#e7f6ec;
+    --junk:#d85a6b; --junk-bg:#fce9ec;
+    --line:#efe3d2; --good:#3fa06a; --bad:#d85a6b;
+    --shadow:0 6px 18px rgba(120,90,50,.14);
+  }
+  /* --accent は #e8873b（上の :root で定義） */
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:-apple-system,"Hiragino Kaku Gothic ProN","Yu Gothic UI",sans-serif;
+    background:linear-gradient(160deg,#fff8ee 0%,#ffeede 100%);
+    color:var(--ink); min-height:100vh; line-height:1.5;
+  }
+  .wrap{max-width:820px;margin:0 auto;padding:16px}
+  .screen{display:none;animation:fade .3s ease}
+  .screen.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+  h1{font-size:26px;margin:0 0 2px;letter-spacing:.02em}
+  .tagline{color:var(--sub);font-size:13px;margin:0 0 20px}
+  .panel{background:var(--card);border-radius:18px;padding:20px;box-shadow:var(--shadow);margin-bottom:16px}
+  label{display:block;font-size:13px;color:var(--sub);margin:0 0 5px;font-weight:600}
+  input[type=text]{
+    width:100%;padding:13px 14px;font-size:16px;border:2px solid var(--line);
+    border-radius:12px;background:#fffdfa;color:var(--ink);outline:none;
+  }
+  input[type=text]:focus{border-color:var(--accent)}
+  .code-input{letter-spacing:.35em;text-transform:uppercase;font-weight:700;text-align:center}
+  button{font-family:inherit;cursor:pointer;border:none;font-weight:700}
+  .btn{
+    display:inline-block;width:100%;padding:14px;font-size:16px;border-radius:12px;
+    background:var(--accent);color:#fff;box-shadow:0 4px 0 var(--accent-d);transition:transform .05s,box-shadow .05s;
+  }
+  .btn:active{transform:translateY(3px);box-shadow:none}
+  .btn:disabled{background:#d8cbb9;box-shadow:0 4px 0 #c3b39c;opacity:.7;cursor:not-allowed}
+  .btn.sec{background:#fff;color:var(--accent-d);border:2px solid var(--accent);box-shadow:0 4px 0 #f0d9c2}
+  .btn.ghost{background:#f3ece1;color:var(--ink);box-shadow:0 4px 0 #e2d6c4}
+  .row{display:flex;gap:10px}
+  .row>*{flex:1}
+  .divider{display:flex;align-items:center;gap:12px;color:var(--sub);font-size:12px;margin:16px 0}
+  .divider::before,.divider::after{content:"";flex:1;height:1px;background:var(--line)}
+  .err{color:var(--bad);font-size:13px;min-height:18px;margin-top:8px;font-weight:600}
+  .hint{color:var(--sub);font-size:13px}
+
+  /* ロビー */
+  .code-badge{
+    text-align:center;background:var(--time-bg);border-radius:14px;padding:14px;margin-bottom:14px;
+  }
+  .code-badge .lbl{font-size:12px;color:var(--sub);font-weight:600}
+  .code-badge .val{font-size:40px;font-weight:800;letter-spacing:.15em;color:var(--time);font-variant-numeric:tabular-nums}
+  ul.players{list-style:none;padding:0;margin:0 0 6px}
+  ul.players li{
+    padding:12px 14px;background:#fffdfa;border:1.5px solid var(--line);border-radius:12px;
+    margin-bottom:8px;font-weight:700;display:flex;justify-content:space-between;align-items:center;
+  }
+  ul.players li .badge{font-size:11px;background:var(--accent);color:#fff;padding:2px 8px;border-radius:20px}
+  .waiting{opacity:.5;font-weight:600}
+
+  /* ゲーム画面 */
+  .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+  .topbar .room{font-size:12px;color:var(--sub);font-weight:600}
+  .players-strip{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:10px}
+  .pchip{flex:0 0 auto;min-width:96px;background:var(--card);border-radius:12px;padding:9px 11px;box-shadow:var(--shadow);border:2px solid transparent}
+  .pchip.current{border-color:var(--accent);background:#fff7ec}
+  .pchip .pn{font-weight:700;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:110px}
+  .pchip .ps{font-size:20px;font-weight:800;color:var(--accent-d)}
+  .pchip .ph{font-size:11px;color:var(--sub)}
+
+  .board{display:flex;gap:12px;margin-bottom:12px}
+  .pile{flex:1;background:var(--card);border-radius:14px;padding:12px;text-align:center;box-shadow:var(--shadow)}
+  .pile .lbl{font-size:11px;color:var(--sub);font-weight:700;margin-bottom:6px}
+  .pile .big{font-size:22px;font-weight:800}
+  .pile .mini-card{font-size:14px;font-weight:700;padding:8px;border-radius:10px;background:var(--carb-bg)}
+
+  .banner{border-radius:12px;padding:11px 14px;font-weight:700;font-size:14px;margin-bottom:12px;text-align:center;background:#eee}
+  .banner.my{background:#fff2cf;color:#8a5a12;box-shadow:0 0 0 2px #f4d79a inset}
+
+  .actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+  .actions .btn{padding:12px;font-size:14px}
+  .actions .full{grid-column:1/-1}
+
+  .hand-title{font-size:12px;color:var(--sub);font-weight:700;margin:12px 0 6px}
+  .hand{display:flex;flex-wrap:wrap;gap:8px}
+  .card{
+    width:82px;border-radius:12px;padding:9px 8px;background:var(--card);border:2px solid var(--line);
+    cursor:pointer;transition:transform .08s,box-shadow .08s;position:relative;user-select:none;
+  }
+  .card:active{transform:scale(.97)}
+  .card.selected{border-color:var(--accent);box-shadow:0 0 0 3px #f6d9b8;transform:translateY(-4px)}
+  .card .grp{font-size:10px;font-weight:700;padding:1px 6px;border-radius:20px;display:inline-block;margin-bottom:5px}
+  .card .nm{font-size:15px;font-weight:800;line-height:1.2}
+  .card .nt{font-size:9.5px;color:var(--sub);margin-top:4px;line-height:1.3;min-height:24px}
+  .card.g時間{background:var(--time-bg)} .card.g時間 .grp{background:var(--time);color:#fff}
+  .card.g炭水化物{background:var(--carb-bg)} .card.g炭水化物 .grp{background:var(--carb);color:#fff}
+  .card.gタンパク質{background:var(--protein-bg)} .card.gタンパク質 .grp{background:var(--protein);color:#fff}
+  .card.gジャンク{background:var(--junk-bg)} .card.gジャンク .grp{background:var(--junk);color:#fff}
+
+  .log{margin-top:14px;background:#fffdfa;border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;max-height:150px;overflow-y:auto}
+  .log .lg-title{font-size:11px;color:var(--sub);font-weight:700;margin-bottom:6px}
+  .log div.entry{font-size:12.5px;padding:3px 0;border-bottom:1px dashed #f1e7d8;color:#5a4c3a}
+  .log div.entry:last-child{border-bottom:none}
+
+  /* 結果 */
+  .winner{font-size:24px;font-weight:800;text-align:center;margin:6px 0 16px;color:var(--accent-d)}
+  ol.result{list-style:none;padding:0;margin:0}
+  ol.result li{display:flex;align-items:center;gap:12px;padding:12px 14px;background:#fffdfa;border:1.5px solid var(--line);border-radius:12px;margin-bottom:8px}
+  ol.result li .rank{font-size:20px;font-weight:800;width:28px;text-align:center}
+  ol.result li.first{background:#fff7e0;border-color:#f2d98a}
+  ol.result li .rname{flex:1;font-weight:700}
+  ol.result li .rscore{font-weight:800;font-size:18px}
+
+  details.rules{margin-top:8px;background:var(--card);border-radius:14px;padding:4px 16px;box-shadow:var(--shadow)}
+  details.rules summary{cursor:pointer;font-weight:700;padding:12px 0;font-size:14px}
+  details.rules table{width:100%;border-collapse:collapse;font-size:12.5px;margin:6px 0 12px}
+  details.rules th,details.rules td{border-bottom:1px solid var(--line);padding:6px 4px;text-align:left}
+  details.rules th{color:var(--sub)}
+  .pts{font-weight:800}
+  .pts.pos{color:var(--good)} .pts.neg{color:var(--bad)}
+  .footer{text-align:center;color:var(--sub);font-size:11px;margin:20px 0 8px}
+  .status-pill{font-size:11px;color:var(--sub);text-align:center;margin-top:8px;min-height:16px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ホーム -->
+  <section id="screen-home" class="screen active">
+    <h1>🍚 あさたんたんゲーム</h1>
+    <p class="tagline">朝食に炭水化物とタンパク質を。脳力点を競うカードゲーム。</p>
+
+    <div class="panel">
+      <label for="input-name">あなたの名前</label>
+      <input type="text" id="input-name" maxlength="12" placeholder="なまえ（12文字まで）">
+
+      <div class="divider">オンラインで対戦</div>
+      <button class="btn" id="btn-create">部屋をつくる（ホスト）</button>
+      <div style="height:10px"></div>
+      <label for="input-code">部屋コードで参加</label>
+      <div class="row">
+        <input type="text" id="input-code" class="code-input" maxlength="5" placeholder="XXXXX">
+        <button class="btn sec" id="btn-join" style="flex:0 0 42%">参加する</button>
+      </div>
+
+      <div class="divider">ひとりで練習</div>
+      <button class="btn ghost" id="btn-cpu">CPUと対戦（ネット不要）</button>
+
+      <div class="err" id="home-error"></div>
+      <div class="status-pill" id="home-status"></div>
+    </div>
+
+    <details class="rules">
+      <summary>📖 ルールと役の一覧を見る</summary>
+      <p class="hint">手番＝①山札か捨札から1枚引く → ②役を宣言（任意・複数可）→ ③1枚捨てる。山札が尽きたら終了、脳力点の合計が高い人の勝ち。</p>
+      <table>
+        <tr><th>役</th><th>組み合わせ</th><th>得点</th></tr>
+        <tr><td>あさたんたん</td><td>朝食＋炭水化物＋タンパク質</td><td class="pts pos">+10</td></tr>
+        <tr><td>良質ボーナス</td><td>朝食＋玄米＋（卵/納豆）</td><td class="pts pos">+15</td></tr>
+        <tr><td>ひるたんたん</td><td>昼食＋炭水化物＋タンパク質</td><td class="pts pos">+6</td></tr>
+        <tr><td>よるひかえめ</td><td>夕食＋タンパク質</td><td class="pts pos">+5</td></tr>
+        <tr><td>夜食ジャンク</td><td>夜食＋ジャンク</td><td class="pts neg">−10</td></tr>
+        <tr><td>朝食抜き</td><td>朝食抜きのみ</td><td class="pts neg">−8</td></tr>
+        <tr><td>夕食抜き</td><td>夕食抜きのみ</td><td class="pts neg">−3</td></tr>
+      </table>
+      <p class="hint">※ ジャンクフードが1枚でも混ざると、その役の得点は半分（端数切り捨て）。</p>
+    </details>
+
+    <div class="footer">水野氏『集中メシ』の「あさたんたん」に着想を得た非公式デジタル版</div>
+  </section>
+
+  <!-- ロビー -->
+  <section id="screen-lobby" class="screen">
+    <h1>🚪 待機ルーム</h1>
+    <div class="panel">
+      <div class="code-badge">
+        <div class="lbl">部屋コード（友だちに伝えてね）</div>
+        <div class="val" id="lobby-code">----</div>
+      </div>
+      <label>参加メンバー</label>
+      <ul class="players" id="lobby-players"></ul>
+      <button class="btn" id="btn-start">ゲームを開始する</button>
+      <div class="hint" id="lobby-hint" style="text-align:center;margin-top:10px"></div>
+      <button class="btn ghost" id="btn-leave-lobby" style="margin-top:14px">やめる</button>
+    </div>
+  </section>
+
+  <!-- ゲーム -->
+  <section id="screen-game" class="screen">
+    <div class="topbar">
+      <h1 style="font-size:20px">🍚 あさたんたん</h1>
+      <span class="room" id="game-room"></span>
+    </div>
+    <div class="players-strip" id="players-strip"></div>
+    <div class="board">
+      <div class="pile">
+        <div class="lbl">山札</div>
+        <div class="big" id="deck-count">0</div>
+        <div class="hint">枚</div>
+      </div>
+      <div class="pile">
+        <div class="lbl">捨札のいちばん上</div>
+        <div class="mini-card" id="discard-name">-</div>
+      </div>
+    </div>
+    <div class="banner" id="turn-banner">…</div>
+    <div class="actions">
+      <button class="btn sec" id="btn-draw-deck">山札から引く</button>
+      <button class="btn sec" id="btn-draw-discard">捨札から引く</button>
+      <button class="btn" id="btn-declare">選んだカードで役を宣言</button>
+      <button class="btn ghost" id="btn-discard-selected">選んだ1枚を捨てる</button>
+    </div>
+    <div class="err" id="game-error"></div>
+    <div class="hand-title">あなたの手札（タップで選択）</div>
+    <div class="hand" id="hand"></div>
+    <div class="log">
+      <div class="lg-title">プレイ記録</div>
+      <div id="log-list"></div>
+    </div>
+  </section>
+
+  <!-- 結果 -->
+  <section id="screen-result" class="screen">
+    <h1>🏆 結果発表</h1>
+    <div class="panel">
+      <div class="winner" id="result-winner"></div>
+      <ol class="result" id="result-list"></ol>
+      <button class="btn" id="btn-rematch" style="margin-top:14px">もう一度あそぶ</button>
+      <button class="btn ghost" id="btn-home" style="margin-top:10px">ホームに戻る</button>
+      <div class="hint" id="result-hint" style="text-align:center;margin-top:10px"></div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+'use strict';
+/* ============================================================
+   あさたんたんゲーム オンライン（静的P2P版）
+   - 1ファイルで動作。オンライン対戦はPeerJSでブラウザ同士を直接接続。
+   - ホストが審判（ゲーム状態の管理）を兼ねる authoritative 構成。
+   - CPU対戦モードはネット不要（ホスト＝自分・相手はAI）。
+   ============================================================ */
+
+/* -------------------- ゲームロジック（ルールブック準拠） -------------------- */
+const TIME_CARDS = ['朝食','昼食','夕食','夜食','朝食抜き','夕食抜き'];
+const CARB = ['白米','玄米','パン','うどん'];
+const PROTEIN = ['卵','納豆','サバ','しらす','鶏肉'];
+const JUNK = ['ポテトチップス','甘い菓子','カップ麺'];
+const NOTES = {
+  '朝食':'一日のはじまり。役の要！','昼食':'安定の一枚。','夕食':'軽めが吉。',
+  '夜食':'要注意タイム。','朝食抜き':'脳のエネ不足…','夕食抜き':'影響は小さめ。',
+  '白米':'定番の主食。','玄米':'低GIで◎。','パン':'忙しい朝の味方。','うどん':'するっと一杯。',
+  '卵':'万能選手。','納豆':'発酵パワー。','サバ':'DHA/EPA豊富。','しらす':'手軽なカルシウム。','鶏肉':'満足感◎。',
+  'ポテトチップス':'食べ過ぎ注意。','甘い菓子':'血糖値スパイク。','カップ麺':'手軽だけど…。',
+};
+function classify(name){
+  if(CARB.includes(name))return 'carb';
+  if(PROTEIN.includes(name))return 'protein';
+  if(JUNK.includes(name))return 'junk';
+  return null;
+}
+function buildDeck(){
+  const cards=[]; let id=0;
+  const push=(group,name)=>{for(let i=0;i<3;i++)cards.push({id:'c'+(id++),group,name,note:NOTES[name]});};
+  TIME_CARDS.forEach(n=>push('時間',n));
+  CARB.forEach(n=>push('炭水化物',n));
+  PROTEIN.forEach(n=>push('タンパク質',n));
+  JUNK.forEach(n=>push('ジャンク',n));
+  return cards;
+}
+function shuffle(arr){
+  const a=arr.slice();
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+  return a;
+}
+function validateYaku(timeCard, foodCards){
+  const time=timeCard.name;
+  const names=foodCards.map(c=>c.name);
+  const classes=names.map(classify);
+  const carbCount=classes.filter(c=>c==='carb').length;
+  const proteinCount=classes.filter(c=>c==='protein').length;
+  const junkCount=classes.filter(c=>c==='junk').length;
+  const hasJunk=junkCount>0;
+  const hasOther=classes.some(c=>c===null);
+  if(hasOther)return{valid:false,reason:'食材カード以外が含まれています'};
+  if(time==='朝食抜き'||time==='夕食抜き'){
+    if(foodCards.length!==0)return{valid:false,reason:`${time}は食材カードなしで宣言してください`};
+    return{valid:true,label:time,score:time==='朝食抜き'?-8:-3};
+  }
+  if(time==='朝食'){
+    if(names.includes('玄米')&&(names.includes('卵')||names.includes('納豆'))&&!hasJunk)
+      return{valid:true,label:'あさたんたん・良質ボーナス',score:15};
+    if(carbCount>=1&&proteinCount>=1){
+      let score=10,label='あさたんたん（基本形）';
+      if(hasJunk){score=Math.floor(score/2);label+='（ジャンク混入）';}
+      return{valid:true,label,score};
+    }
+    return{valid:false,reason:'朝食には炭水化物1枚とタンパク質1枚が必要です'};
+  }
+  if(time==='昼食'){
+    if(carbCount>=1&&proteinCount>=1){
+      let score=6,label='ひるたんたん';
+      if(hasJunk){score=Math.floor(score/2);label+='（ジャンク混入）';}
+      return{valid:true,label,score};
+    }
+    return{valid:false,reason:'昼食には炭水化物1枚とタンパク質1枚が必要です'};
+  }
+  if(time==='夕食'){
+    if(proteinCount>=1){
+      let score=5,label='よるひかえめ';
+      if(hasJunk){score=Math.floor(score/2);label+='（ジャンク混入）';}
+      return{valid:true,label,score};
+    }
+    return{valid:false,reason:'夕食にはタンパク質1枚が必要です'};
+  }
+  if(time==='夜食'){
+    if(hasJunk)return{valid:true,label:'夜食ジャンク',score:-10};
+    return{valid:false,reason:'夜食はジャンクフードと組み合わせた時のみ宣言できます'};
+  }
+  return{valid:false,reason:'不明な時間カードです'};
+}
+
+/* -------------------- 状態 -------------------- */
+const HAND_SIZE=7, MIN_PLAYERS=2, MAX_PLAYERS=4, ID_PREFIX='asatan-v1-';
+let role=null;            // 'host' | 'guest' | 'local'
+let myId=null;            // 自分のプレイヤーID
+let peer=null;            // PeerJS
+let hostConn=null;        // guest: ホストへの接続
+const connections=new Map(); // host: connId -> {conn, playerId}
+let game=null;           // host/local が持つ権威状態
+let pubState=null;       // 描画に使う公開状態
+let myHand=[];           // 自分の手札
+let selected=new Set();  // 選択中カードID
+let cpuTimer=null;
+
+/* -------------------- 画面遷移 -------------------- */
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function homeError(m){document.getElementById('home-error').textContent=m||'';}
+function homeStatus(m){document.getElementById('home-status').textContent=m||'';}
+function gameError(m){
+  const e=document.getElementById('game-error');e.textContent=m||'';
+  if(m)setTimeout(()=>{if(e.textContent===m)e.textContent='';},3500);
+}
+
+/* -------------------- ホスト側ゲーム制御 -------------------- */
+function newGame(hostName){
+  return{
+    code:null, phase:'lobby', hostId:myId,
+    players:[{id:myId,name:hostName,hand:[],score:0,junkYakuCount:0,connected:true,isCPU:false}],
+    currentIdx:0, turnStep:'draw', deck:[], discard:[], log:[],
+  };
+}
+function addLog(text){game.log.push({t:Date.now(),text});}
+function startGame(){
+  game.deck=shuffle(buildDeck());
+  game.discard=[];
+  game.players.forEach(p=>{p.hand=game.deck.splice(0,HAND_SIZE);p.score=0;p.junkYakuCount=0;});
+  game.discard.push(game.deck.shift());
+  game.currentIdx=0; game.turnStep='draw'; game.phase='playing'; game.log=[];
+  addLog(`ゲーム開始！ ${game.players.map(p=>p.name).join('、')} が参加。`);
+}
+function nextTurn(){
+  if(game.deck.length===0){game.phase='ended';addLog('山札が尽きました。ゲーム終了！');return;}
+  game.currentIdx=(game.currentIdx+1)%game.players.length;
+  game.turnStep='draw';
+}
+function playerById(id){return game.players.find(p=>p.id===id);}
+function publicState(){
+  return{
+    code:game.code, phase:game.phase, hostId:game.hostId,
+    players:game.players.map(p=>({id:p.id,name:p.name,handCount:p.hand.length,score:p.score,junkYakuCount:p.junkYakuCount,connected:p.connected,isCPU:p.isCPU})),
+    currentPlayerId:game.players[game.currentIdx]?game.players[game.currentIdx].id:null,
+    turnStep:game.turnStep, deckCount:game.deck.length,
+    discardTop:game.discard.length?game.discard[game.discard.length-1]:null,
+    log:game.log.slice(-30),
+  };
+}
+
+// ホスト/ローカルでの行動適用（playerId が行動主）
+function applyDraw(playerId,source){
+  if(game.phase!=='playing')return;
+  const p=game.players[game.currentIdx];
+  if(!p||p.id!==playerId||game.turnStep!=='draw')return;
+  let card;
+  if(source==='discard'&&game.discard.length)card=game.discard.pop();
+  else{if(game.deck.length===0)return;card=game.deck.shift();}
+  p.hand.push(card); game.turnStep='action';
+  addLog(`${p.name} が${source==='discard'?'捨札':'山札'}から引きました。`);
+  if(game.deck.length===0)addLog('山札が0枚になりました。');
+}
+function applyDeclare(playerId,timeCardId,foodCardIds){
+  if(game.phase!=='playing')return{ok:false};
+  const p=game.players[game.currentIdx];
+  if(!p||p.id!==playerId||game.turnStep!=='action')return{ok:false};
+  const timeCard=p.hand.find(c=>c.id===timeCardId&&c.group==='時間');
+  if(!timeCard)return{ok:false,reason:'時間カードを1枚含めてください'};
+  const foodCards=(foodCardIds||[]).map(id=>p.hand.find(c=>c.id===id)).filter(Boolean);
+  if(foodCards.length!==(foodCardIds||[]).length)return{ok:false,reason:'カードの選択が不正です'};
+  const result=validateYaku(timeCard,foodCards);
+  if(!result.valid)return{ok:false,reason:result.reason};
+  const used=new Set([timeCard.id,...foodCards.map(c=>c.id)]);
+  p.hand=p.hand.filter(c=>!used.has(c.id));
+  p.score+=result.score;
+  if(result.score<0||/ジャンク/.test(result.label))p.junkYakuCount++;
+  addLog(`${p.name}：「${result.label}」成立！ ${result.score>=0?'+':''}${result.score}点`);
+  return{ok:true};
+}
+function applyDiscard(playerId,cardId){
+  if(game.phase!=='playing')return;
+  const p=game.players[game.currentIdx];
+  if(!p||p.id!==playerId||game.turnStep!=='action')return;
+  const idx=p.hand.findIndex(c=>c.id===cardId);
+  if(idx===-1)return;
+  const [card]=p.hand.splice(idx,1);
+  game.discard.push(card);
+  addLog(`${p.name} が「${card.name}」を捨てました。`);
+  nextTurn();
+}
+
+// 状態が変わったら配信＆自分の描画、CPU手番を進める
+function hostBroadcastAndRender(){
+  pubState=publicState();
+  if(role==='host'){
+    for(const{conn,playerId} of connections.values()){
+      if(conn&&conn.open){
+        conn.send({type:'state',state:pubState});
+        const pl=playerById(playerId);
+        conn.send({type:'hand',hand:pl?pl.hand:[]});
+      }
+    }
+  }
+  const me=playerById(myId);
+  myHand=me?me.hand:[];
+  renderFromState();
+  scheduleCpu();
+}
+function sendReject(playerId,reason){
+  if(role==='host'){
+    for(const{conn,playerId:pid} of connections.values()){
+      if(pid===playerId&&conn&&conn.open)conn.send({type:'reject',reason});
+    }
+  }
+}
+
+/* -------------------- CPU（AI） -------------------- */
+function scheduleCpu(){
+  if(role==='guest')return;
+  if(!game||game.phase!=='playing')return;
+  const cur=game.players[game.currentIdx];
+  if(!cur||!cur.isCPU)return;
+  clearTimeout(cpuTimer);
+  cpuTimer=setTimeout(cpuStep,850);
+}
+function cpuStep(){
+  if(!game||game.phase!=='playing')return;
+  const p=game.players[game.currentIdx];
+  if(!p||!p.isCPU)return;
+  if(game.turnStep==='draw'){
+    // 捨札が役の完成に役立つなら捨札から、そうでなければ山札から
+    const top=game.discard.length?game.discard[game.discard.length-1]:null;
+    const useDiscard=top&&cpuWantsCard(p.hand,top);
+    applyDraw(p.id,useDiscard?'discard':'deck');
+    hostBroadcastAndRender();
+    return;
+  }
+  // action：出せる最良のプラス役を探す
+  const best=findBestYaku(p.hand);
+  if(best){applyDeclare(p.id,best.timeId,best.foodIds);hostBroadcastAndRender();return;}
+  // 捨てる
+  applyDiscard(p.id,cpuPickDiscard(p.hand));
+  hostBroadcastAndRender();
+}
+function cpuWantsCard(hand,card){
+  const c=classify(card.name);
+  const has=g=>hand.some(x=>classify(x.name)===g);
+  if(card.group==='時間'&&['朝食','昼食','夕食'].includes(card.name))return true;
+  if(c==='carb'&&!has('carb'))return true;
+  if(c==='protein'&&!has('protein'))return true;
+  return false;
+}
+// プラス点の役だけを探索（CPUは自滅役を出さない）
+function findBestYaku(hand){
+  const times=hand.filter(c=>c.group==='時間');
+  const carbs=hand.filter(c=>classify(c.name)==='carb');
+  const prots=hand.filter(c=>classify(c.name)==='protein');
+  let best=null;
+  const consider=(timeId,foodIds)=>{
+    const t=hand.find(c=>c.id===timeId);
+    const foods=foodIds.map(id=>hand.find(c=>c.id===id));
+    const r=validateYaku(t,foods);
+    if(r.valid&&r.score>0&&(!best||r.score>best.score))best={score:r.score,timeId,foodIds};
+  };
+  for(const t of times){
+    if(t.name==='朝食'){
+      // 良質ボーナス優先
+      const genmai=carbs.find(c=>c.name==='玄米');
+      const eggNatto=prots.find(c=>c.name==='卵'||c.name==='納豆');
+      if(genmai&&eggNatto)consider(t.id,[genmai.id,eggNatto.id]);
+      if(carbs[0]&&prots[0])consider(t.id,[carbs[0].id,prots[0].id]);
+    }else if(t.name==='昼食'){
+      if(carbs[0]&&prots[0])consider(t.id,[carbs[0].id,prots[0].id]);
+    }else if(t.name==='夕食'){
+      if(prots[0])consider(t.id,[prots[0].id]);
+    }
+  }
+  return best;
+}
+function cpuPickDiscard(hand){
+  // 優先度：ジャンク → マイナス時間札(朝食抜き/夕食抜き/夜食) → 余った時間札 → 先頭
+  const junk=hand.find(c=>c.group==='ジャンク');
+  if(junk)return junk.id;
+  const badTime=hand.find(c=>['朝食抜き','夕食抜き','夜食'].includes(c.name));
+  if(badTime)return badTime.id;
+  const times=hand.filter(c=>c.group==='時間');
+  if(times.length>1)return times[times.length-1].id;
+  return hand[hand.length-1].id;
+}
+
+/* -------------------- 行動（自分＝人間プレイヤー） -------------------- */
+function doDraw(source){
+  if(role==='guest'){hostConn&&hostConn.send({type:'action',action:'draw',source});return;}
+  applyDraw(myId,source); hostBroadcastAndRender();
+}
+function doDeclare(timeCardId,foodCardIds){
+  if(role==='guest'){hostConn&&hostConn.send({type:'action',action:'declare',timeCardId,foodCardIds});return;}
+  const r=applyDeclare(myId,timeCardId,foodCardIds);
+  if(!r.ok){gameError(r.reason||'その役は成立しません');return;}
+  hostBroadcastAndRender();
+}
+function doDiscard(cardId){
+  if(role==='guest'){hostConn&&hostConn.send({type:'action',action:'discard',cardId});return;}
+  applyDiscard(myId,cardId); hostBroadcastAndRender();
+}
+function doStart(){
+  if(role==='guest')return;
+  if(game.players.length<MIN_PLAYERS)return;
+  startGame(); hostBroadcastAndRender();
+}
+
+/* -------------------- 描画 -------------------- */
+function renderFromState(){
+  if(!pubState)return;
+  if(pubState.phase==='lobby')renderLobby();
+  else if(pubState.phase==='playing'){show('screen-game');renderGame();}
+  else if(pubState.phase==='ended')renderResult();
+}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+function renderLobby(){
+  show('screen-lobby');
+  document.getElementById('lobby-code').textContent=pubState.code||'----';
+  const ul=document.getElementById('lobby-players');ul.innerHTML='';
+  pubState.players.forEach(p=>{
+    const li=document.createElement('li');
+    li.innerHTML=`<span>${esc(p.name)}${p.isCPU?' 🤖':''}</span>`+
+      (p.id===pubState.hostId?'<span class="badge">ホスト</span>':'');
+    ul.appendChild(li);
+  });
+  const isHost=(role!=='guest');
+  const btn=document.getElementById('btn-start');
+  btn.style.display=isHost?'block':'none';
+  btn.disabled=pubState.players.length<MIN_PLAYERS;
+  document.getElementById('lobby-hint').textContent=isHost
+    ?(pubState.players.length<MIN_PLAYERS?'あと1人以上の参加を待っています…':'準備OK！開始できます。')
+    :'ホストが開始するのを待っています…';
+}
+
+function renderGame(){
+  document.getElementById('game-room').textContent=pubState.code?('部屋 '+pubState.code):'CPU対戦';
+  const strip=document.getElementById('players-strip');strip.innerHTML='';
+  pubState.players.forEach(p=>{
+    const d=document.createElement('div');
+    d.className='pchip'+(p.id===pubState.currentPlayerId?' current':'');
+    d.innerHTML=`<div class="pn">${esc(p.name)}${p.isCPU?' 🤖':''}${p.connected===false?'⚠️':''}</div>
+      <div class="ps">${p.score}</div><div class="ph">手札 ${p.handCount}枚</div>`;
+    strip.appendChild(d);
+  });
+  document.getElementById('deck-count').textContent=pubState.deckCount;
+  document.getElementById('discard-name').textContent=pubState.discardTop?pubState.discardTop.name:'-';
+
+  const isMyTurn=pubState.currentPlayerId===myId;
+  const banner=document.getElementById('turn-banner');
+  const cur=pubState.players.find(p=>p.id===pubState.currentPlayerId);
+  if(isMyTurn){
+    banner.className='banner my';
+    banner.textContent=pubState.turnStep==='draw'
+      ?'あなたの番。山札か捨札から1枚引いてください。'
+      :'引きました。役を宣言するか、1枚捨てて手番を終えます。';
+  }else{
+    banner.className='banner';
+    banner.textContent=`${cur?cur.name:'相手'} の番です…`;
+  }
+  const t=pubState.turnStep;
+  document.getElementById('btn-draw-deck').disabled=!(isMyTurn&&t==='draw');
+  document.getElementById('btn-draw-discard').disabled=!(isMyTurn&&t==='draw'&&pubState.discardTop);
+  document.getElementById('btn-declare').disabled=!(isMyTurn&&t==='action');
+  document.getElementById('btn-discard-selected').disabled=!(isMyTurn&&t==='action');
+
+  const log=document.getElementById('log-list');log.innerHTML='';
+  pubState.log.slice().reverse().forEach(e=>{
+    const d=document.createElement('div');d.className='entry';d.textContent=e.text;log.appendChild(d);
+  });
+  renderHand();
+}
+function renderHand(){
+  selected=new Set(Array.from(selected).filter(id=>myHand.some(c=>c.id===id)));
+  const h=document.getElementById('hand');h.innerHTML='';
+  myHand.forEach(card=>{
+    const d=document.createElement('div');
+    d.className='card g'+card.group+(selected.has(card.id)?' selected':'');
+    d.innerHTML=`<span class="grp">${card.group}</span><div class="nm">${esc(card.name)}</div><div class="nt">${esc(card.note||'')}</div>`;
+    d.addEventListener('click',()=>{
+      if(selected.has(card.id))selected.delete(card.id);else selected.add(card.id);
+      renderHand();
+    });
+    h.appendChild(d);
+  });
+}
+function renderResult(){
+  show('screen-result');
+  const sorted=pubState.players.slice().sort((a,b)=>b.score-a.score||a.junkYakuCount-b.junkYakuCount);
+  document.getElementById('result-winner').textContent=sorted.length?`🏆 ${sorted[0].name} の勝利！`:'';
+  const ol=document.getElementById('result-list');ol.innerHTML='';
+  const medal=['🥇','🥈','🥉'];
+  sorted.forEach((p,i)=>{
+    const li=document.createElement('li');if(i===0)li.className='first';
+    li.innerHTML=`<span class="rank">${medal[i]||(i+1)}</span>
+      <span class="rname">${esc(p.name)}${p.isCPU?' 🤖':''}</span>
+      <span class="rscore">${p.score}点</span>`;
+    ol.appendChild(li);
+  });
+  const isHost=(role!=='guest');
+  document.getElementById('btn-rematch').style.display=isHost?'block':'none';
+  document.getElementById('result-hint').textContent=isHost?'':'ホストがもう一度始めるのを待っています…';
+}
+
+/* -------------------- P2P：ホスト -------------------- */
+function makeCode(){
+  const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // 紛らわしい文字を除外
+  let s='';for(let i=0;i<5;i++)s+=chars[Math.floor(Math.random()*chars.length)];
+  return s;
+}
+function hostCreate(name){
+  if(typeof Peer==='undefined'){homeError('通信ライブラリを読み込めませんでした（オフライン？）。CPU対戦はご利用いただけます。');return;}
+  homeStatus('部屋を作成中…');
+  const code=makeCode();
+  role='host'; myId='host';
+  peer=new Peer(ID_PREFIX+code);
+  game=newGame(name); game.code=code; game.hostId='host';
+  peer.on('open',()=>{
+    homeStatus(''); pubState=publicState(); myHand=[];
+    show('screen-lobby'); renderLobby();
+  });
+  peer.on('connection',conn=>hostOnConnection(conn));
+  peer.on('error',err=>{
+    if(err.type==='unavailable-id'){ // まれなコード衝突 → 作り直し
+      peer.destroy();homeStatus('');setTimeout(()=>hostCreate(name),100);return;
+    }
+    homeError('接続エラー：'+err.type);homeStatus('');
+  });
+}
+function hostOnConnection(conn){
+  conn.on('open',()=>{
+    // 定員・状態チェック
+    if(game.phase!=='lobby'){conn.send({type:'kick',reason:'このゲームはすでに開始しています'});setTimeout(()=>conn.close(),200);return;}
+    if(game.players.length>=MAX_PLAYERS){conn.send({type:'kick',reason:'満員です（最大4人）'});setTimeout(()=>conn.close(),200);return;}
+  });
+  conn.on('data',msg=>hostHandleMessage(conn,msg));
+  conn.on('close',()=>hostOnClose(conn));
+}
+function hostHandleMessage(conn,msg){
+  if(!msg||typeof msg!=='object')return;
+  if(msg.type==='join'){
+    if(game.phase!=='lobby'||game.players.length>=MAX_PLAYERS){
+      conn.send({type:'kick',reason:game.phase!=='lobby'?'すでに開始済みです':'満員です'});return;
+    }
+    const pid='p'+Date.now().toString(36)+Math.floor(Math.random()*1000);
+    const name=(msg.name||'プレイヤー').slice(0,12);
+    game.players.push({id:pid,name,hand:[],score:0,junkYakuCount:0,connected:true,isCPU:false});
+    connections.set(conn.connectionId||pid,{conn,playerId:pid});
+    conn.send({type:'welcome',playerId:pid,code:game.code});
+    hostBroadcastAndRender();
+    return;
+  }
+  // 行動メッセージ：接続からplayerIdを引く
+  const entry=[...connections.values()].find(e=>e.conn===conn);
+  if(!entry)return;
+  const pid=entry.playerId;
+  if(msg.type==='action'){
+    if(msg.action==='draw'){applyDraw(pid,msg.source);hostBroadcastAndRender();}
+    else if(msg.action==='declare'){
+      const r=applyDeclare(pid,msg.timeCardId,msg.foodCardIds);
+      if(!r.ok)sendReject(pid,r.reason||'その役は成立しません');
+      else hostBroadcastAndRender();
+    }
+    else if(msg.action==='discard'){applyDiscard(pid,msg.cardId);hostBroadcastAndRender();}
+  }
+}
+function hostOnClose(conn){
+  const entry=[...connections.entries()].find(([,e])=>e.conn===conn);
+  if(!entry)return;
+  const[key,e]=entry;
+  const p=playerById(e.playerId);
+  if(game.phase==='lobby'){
+    game.players=game.players.filter(x=>x.id!==e.playerId);
+  }else if(p){
+    p.connected=false;addLog(`${p.name} が切断しました。`);
+  }
+  connections.delete(key);
+  hostBroadcastAndRender();
+}
+
+/* -------------------- P2P：ゲスト -------------------- */
+function guestJoin(name,code){
+  if(typeof Peer==='undefined'){homeError('通信ライブラリを読み込めませんでした（オフライン？）。');return;}
+  homeStatus('部屋に接続中…');
+  role='guest'; myId=null;
+  peer=new Peer();
+  let opened=false;
+  const failTimer=setTimeout(()=>{if(!opened){homeError('部屋が見つかりませんでした。コードを確認してください。');homeStatus('');peer&&peer.destroy();}},9000);
+  peer.on('open',()=>{
+    hostConn=peer.connect(ID_PREFIX+code,{reliable:true});
+    hostConn.on('open',()=>{opened=true;clearTimeout(failTimer);hostConn.send({type:'join',name});});
+    hostConn.on('data',guestHandleMessage);
+    hostConn.on('close',()=>{if(pubState&&pubState.phase!=='ended'){homeError('ホストとの接続が切れました。');homeStatus('');show('screen-home');}});
+    hostConn.on('error',()=>{});
+  });
+  peer.on('error',err=>{
+    clearTimeout(failTimer);
+    if(err.type==='peer-unavailable')homeError('その部屋コードは見つかりませんでした。');
+    else homeError('接続エラー：'+err.type);
+    homeStatus('');
+  });
+}
+function guestHandleMessage(msg){
+  if(!msg||typeof msg!=='object')return;
+  if(msg.type==='welcome'){myId=msg.playerId;homeStatus('');return;}
+  if(msg.type==='kick'){homeError(msg.reason||'参加できませんでした');homeStatus('');peer&&peer.destroy();show('screen-home');return;}
+  if(msg.type==='reject'){gameError(msg.reason);return;}
+  if(msg.type==='state'){pubState=msg.state;renderFromState();return;}
+  if(msg.type==='hand'){myHand=msg.hand||[];if(pubState&&pubState.phase==='playing')renderHand();return;}
+}
+
+/* -------------------- CPU対戦（ローカル） -------------------- */
+function startCpuGame(name){
+  role='local'; myId='me';
+  game=newGame(name||'あなた'); game.code=null; game.hostId='me';
+  // CPUを2人追加（合計3人）
+  game.players.push({id:'cpu1',name:'CPUあさひ',hand:[],score:0,junkYakuCount:0,connected:true,isCPU:true});
+  game.players.push({id:'cpu2',name:'CPUゆうべ',hand:[],score:0,junkYakuCount:0,connected:true,isCPU:true});
+  startGame();
+  hostBroadcastAndRender();
+}
+
+/* -------------------- 後片付け＆リマッチ -------------------- */
+function resetToHome(){
+  clearTimeout(cpuTimer);
+  try{if(peer)peer.destroy();}catch(e){}
+  peer=null;hostConn=null;connections.clear();
+  role=null;myId=null;game=null;pubState=null;myHand=[];selected.clear();
+  homeError('');homeStatus('');
+  show('screen-home');
+}
+function rematch(){
+  if(role==='guest')return;
+  if(!game)return;
+  // 切断したプレイヤーを除外して再戦
+  game.players=game.players.filter(p=>p.connected!==false);
+  if(game.players.length<MIN_PLAYERS){ // CPU戦は常にOK。オンラインで人が減ったらロビーへ
+    game.phase='lobby';hostBroadcastAndRender();return;
+  }
+  startGame();hostBroadcastAndRender();
+}
+
+/* -------------------- UIバインド -------------------- */
+function nameVal(){return document.getElementById('input-name').value.trim().slice(0,12)||'プレイヤー';}
+document.getElementById('btn-create').addEventListener('click',()=>{homeError('');hostCreate(nameVal());});
+document.getElementById('btn-join').addEventListener('click',()=>{
+  homeError('');
+  const code=document.getElementById('input-code').value.trim().toUpperCase();
+  if(code.length<4){homeError('部屋コードを入力してください');return;}
+  guestJoin(nameVal(),code);
+});
+document.getElementById('btn-cpu').addEventListener('click',()=>{homeError('');startCpuGame(nameVal());});
+document.getElementById('btn-start').addEventListener('click',doStart);
+document.getElementById('btn-leave-lobby').addEventListener('click',resetToHome);
+document.getElementById('btn-home').addEventListener('click',resetToHome);
+document.getElementById('btn-rematch').addEventListener('click',rematch);
+
+document.getElementById('btn-draw-deck').addEventListener('click',()=>doDraw('deck'));
+document.getElementById('btn-draw-discard').addEventListener('click',()=>doDraw('discard'));
+document.getElementById('btn-declare').addEventListener('click',()=>{
+  const ids=Array.from(selected);
+  const timeCard=myHand.find(c=>ids.includes(c.id)&&c.group==='時間');
+  if(!timeCard){gameError('時間カードを1枚含めて選んでください');return;}
+  const foodIds=ids.filter(id=>id!==timeCard.id);
+  doDeclare(timeCard.id,foodIds);
+  selected.clear();
+});
+document.getElementById('btn-discard-selected').addEventListener('click',()=>{
+  const ids=Array.from(selected);
+  if(ids.length!==1){gameError('捨てるカードを1枚だけ選んでください');return;}
+  doDiscard(ids[0]);
+  selected.clear();
+});
+// コード入力を大文字に
+document.getElementById('input-code').addEventListener('input',e=>{e.target.value=e.target.value.toUpperCase();});
+</script>
+</body>
+</html>

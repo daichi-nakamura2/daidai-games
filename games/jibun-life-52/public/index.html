@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>じぶんライフ52 - 自分らしい人生を育てるゲーム</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- タイトル画面 -->
+  <div id="title-screen" class="screen">
+    <div class="title-card">
+      <div class="title-emoji">🌱</div>
+      <h1 class="title-logo">じぶんライフ<span>52</span></h1>
+      <p class="title-sub">自分らしい人生を育てる 52週間シミュレーション</p>
+      <div class="title-desc">
+        <p>1ターン＝1週間。毎週の行動を選んで、<br>1年後の「じぶん」を育てよう。</p>
+        <p>仕事だけでも、遊びだけでもうまくいかない。<br>時間の使い方とストレス管理がカギ！</p>
+      </div>
+      <button id="btn-start" class="btn btn-primary">はじめる</button>
+      <button id="btn-continue" class="btn btn-ghost hidden">つづきから</button>
+    </div>
+  </div>
+
+  <!-- ゲーム画面 -->
+  <div id="game-screen" class="screen hidden">
+    <header class="topbar">
+      <div class="week-info">
+        <span id="week-label" class="week-label">4月 第1週</span>
+        <span id="turn-label" class="turn-label">WEEK 1 / 52</span>
+      </div>
+      <div class="turn-progress"><div id="turn-progress-fill"></div></div>
+    </header>
+
+    <section id="stats-panel" class="stats-panel">
+      <!-- ステータスバーは ui.js が描画 -->
+    </section>
+
+    <section class="badges-row" id="badges-row">
+      <!-- 恋人・役職などのバッジ -->
+    </section>
+
+    <main class="main-area">
+      <section class="log-panel">
+        <h2 class="panel-title">📖 今週のできごと</h2>
+        <div id="log-list" class="log-list"></div>
+      </section>
+
+      <section class="actions-panel">
+        <h2 class="panel-title">🗓 今週なにをする？</h2>
+        <div id="actions-grid" class="actions-grid">
+          <!-- 行動カードは ui.js が描画 -->
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- イベントモーダル -->
+  <div id="event-modal" class="modal-backdrop hidden">
+    <div class="modal-card">
+      <div id="event-emoji" class="modal-emoji">✨</div>
+      <h3 id="event-title" class="modal-title">イベント</h3>
+      <p id="event-text" class="modal-text"></p>
+      <div id="event-effects" class="modal-effects"></div>
+      <button id="btn-event-ok" class="btn btn-primary">OK</button>
+    </div>
+  </div>
+
+  <!-- エンディングモーダル -->
+  <div id="ending-modal" class="modal-backdrop hidden">
+    <div class="modal-card ending-card">
+      <div id="ending-emoji" class="modal-emoji">🎉</div>
+      <div id="ending-grade" class="ending-grade">A</div>
+      <h3 id="ending-title" class="modal-title">エンディング</h3>
+      <p id="ending-text" class="modal-text"></p>
+      <div id="ending-stats" class="ending-stats"></div>
+      <button id="btn-restart" class="btn btn-primary">もう一度あそぶ</button>
+    </div>
+  </div>
+
+  <!-- データ → ロジック → UI の順に読み込む -->
+  <script src="js/data/actions.js"></script>
+  <script src="js/data/events.js"></script>
+  <script src="js/data/endings.js"></script>
+  <script src="js/state.js"></script>
+  <script src="js/engine.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

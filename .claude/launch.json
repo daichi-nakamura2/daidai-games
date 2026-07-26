@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "daidai-games",
+      "runtimeExecutable": "/Users/a818011/.local/node/bin/node",
+      "runtimeArgs": ["server.js"],
+      "port": 3000
+    }
+  ]
+}

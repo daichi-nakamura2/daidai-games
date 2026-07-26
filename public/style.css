@@ -1,0 +1,193 @@
+/* -------------------------------------------------------------------------
+ * だいだいゲームズ トップページ
+ *   ※このCSSはトップページ専用。各ゲームのCSSは games/<名前>/public/ の中にあり、
+ *     別ページとして読み込まれるので互いに干渉しない。
+ * ---------------------------------------------------------------------- */
+
+:root {
+  --daidai: #f97316; /* だいだい色 */
+  --daidai-dark: #ea580c;
+  --ink: #3b2f2a;
+  --ink-soft: #7c6a5f;
+  --paper: #fffaf3;
+  --card: #ffffff;
+  --line: #f2e2d0;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP",
+    "Yu Gothic", sans-serif;
+  line-height: 1.7;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* ---- ヘッダー ---- */
+
+.hero {
+  text-align: center;
+  padding: 56px 20px 40px;
+  background: linear-gradient(180deg, #ffe8cc 0%, var(--paper) 100%);
+}
+
+.hero-logo {
+  font-size: 56px;
+  margin: 0 0 8px;
+  line-height: 1;
+}
+
+.hero h1 {
+  margin: 0;
+  font-size: 34px;
+  letter-spacing: 0.06em;
+}
+
+.hero-sub {
+  margin: 12px 0 4px;
+  font-size: 16px;
+  color: var(--ink-soft);
+}
+
+.hero-note {
+  margin: 0;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+/* ---- カード一覧 ---- */
+
+main {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 8px 20px 48px;
+}
+
+.game-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 18px;
+}
+
+.loading {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: var(--ink-soft);
+  padding: 40px 0;
+}
+
+.card {
+  display: flex;
+  gap: 14px;
+  padding: 20px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  text-decoration: none;
+  color: inherit;
+  box-shadow: 0 2px 8px rgba(180, 120, 60, 0.07);
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.card:hover,
+.card:focus-visible {
+  transform: translateY(-3px);
+  border-color: var(--daidai);
+  box-shadow: 0 8px 20px rgba(180, 120, 60, 0.16);
+  outline: none;
+}
+
+.card-emoji {
+  font-size: 34px;
+  line-height: 1.2;
+  flex: 0 0 auto;
+}
+
+.card-body {
+  min-width: 0;
+}
+
+.card h2 {
+  margin: 0;
+  font-size: 19px;
+}
+
+.card .tagline {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--daidai-dark);
+  font-weight: 700;
+}
+
+.card .desc {
+  margin: 8px 0 0;
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+
+.card-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.players {
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.tags li {
+  font-size: 11px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: #fff1e2;
+  color: var(--daidai-dark);
+}
+
+/* ---- フッター ---- */
+
+footer {
+  text-align: center;
+  padding: 24px 20px 40px;
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+/* ---- 404 ---- */
+
+.notfound {
+  max-width: 520px;
+  margin: 0 auto;
+  text-align: center;
+  padding: 80px 20px;
+}
+
+.notfound .back {
+  display: inline-block;
+  margin-top: 16px;
+  padding: 10px 22px;
+  border-radius: 999px;
+  background: var(--daidai);
+  color: #fff;
+  text-decoration: none;
+  font-weight: 700;
+}

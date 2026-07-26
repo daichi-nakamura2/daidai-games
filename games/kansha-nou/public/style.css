@@ -1,0 +1,213 @@
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+  background: linear-gradient(180deg, #fff8ec 0%, #fef1e0 100%);
+  color: #3a2e22;
+  min-height: 100vh;
+}
+
+#app {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 16px 16px 48px;
+}
+
+.app-header h1 {
+  text-align: center;
+  font-size: 1.4rem;
+  color: #d4732c;
+  margin: 8px 0 24px;
+}
+
+.hidden { display: none !important; }
+
+.card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+}
+
+.card h2 { margin-top: 0; font-size: 1.1rem; }
+
+input[type="text"] {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #e0c9a6;
+  border-radius: 10px;
+  font-size: 1rem;
+  margin-bottom: 10px;
+}
+
+button {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
+  background: #e08a3e;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 6px;
+}
+
+button:hover { background: #cc7a30; }
+
+button.secondary {
+  background: #efe2cf;
+  color: #6b5638;
+}
+button.secondary:hover { background: #e4d3b8; }
+
+.error {
+  color: #c0392b;
+  text-align: center;
+  min-height: 1.2em;
+  font-size: 0.9rem;
+}
+
+.room-code {
+  letter-spacing: 4px;
+  font-weight: bold;
+  color: #d4732c;
+}
+
+.player-list {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0;
+}
+
+.player-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #fbf3e6;
+  margin-bottom: 6px;
+}
+
+.player-list li.self { border: 2px solid #e08a3e; }
+.player-list li.finished { opacity: 0.55; }
+.player-list li.disconnected { opacity: 0.4; font-style: italic; }
+
+.coin-badge {
+  background: #d4732c;
+  color: #fff;
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-size: 0.85rem;
+  font-weight: bold;
+}
+
+.hint {
+  color: #8a7a63;
+  font-size: 0.88rem;
+}
+
+.game-layout {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.main-panel {
+  flex: 2;
+  min-width: 280px;
+}
+
+.side-panel {
+  flex: 1;
+  min-width: 200px;
+}
+
+.phase-block {
+  background: #fff;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+}
+
+.topic-text {
+  font-size: 1.3rem;
+  font-weight: bold;
+  background: #fff3e0;
+  border-left: 4px solid #e08a3e;
+  padding: 14px;
+  border-radius: 8px;
+}
+
+.timer-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  font-size: 1.1rem;
+}
+
+.timer {
+  font-weight: bold;
+  font-size: 1.6rem;
+  color: #d4732c;
+}
+
+.chat-log {
+  height: 260px;
+  overflow-y: auto;
+  background: #fdf6ea;
+  border-radius: 10px;
+  padding: 10px;
+  margin-bottom: 10px;
+}
+
+.chat-msg {
+  margin-bottom: 8px;
+}
+
+.chat-msg .name {
+  font-weight: bold;
+  color: #d4732c;
+  margin-right: 6px;
+}
+
+.chat-form {
+  display: flex;
+  gap: 8px;
+}
+
+.chat-form input { margin-bottom: 0; flex: 1; }
+.chat-form button { width: auto; padding: 10px 16px; margin-top: 0; }
+
+.vote-list li {
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.vote-list li:hover { background: #f5e2c4; }
+.vote-list li.voted-for { background: #e08a3e; color: #fff; }
+
+.result-list {
+  list-style: none;
+  padding: 0;
+}
+
+.result-list li {
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #fbf3e6;
+  margin-bottom: 6px;
+  display: flex;
+  justify-content: space-between;
+}
+
+#result-winners {
+  margin: 10px 0;
+  font-weight: bold;
+  color: #d4732c;
+}
+
+.scoreboard li { font-size: 0.92rem; }

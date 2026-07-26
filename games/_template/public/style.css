@@ -1,0 +1,7 @@
+/* このゲーム専用のCSS。他のゲームやトップページとは混ざらない。 */
+body {
+  margin: 0;
+  padding: 24px;
+  font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP", sans-serif;
+  line-height: 1.7;
+}

@@ -1,0 +1,385 @@
+/* ==========================================================
+   じぶんライフ52  スタイルシート
+   モダン & スマホ対応（モバイルファースト）
+   ========================================================== */
+
+:root {
+  --bg: #f4f6fb;
+  --surface: #ffffff;
+  --surface-2: #f0f3fa;
+  --text: #22293a;
+  --text-sub: #6b7280;
+  --primary: #6c5ce7;
+  --primary-dark: #5a4bd1;
+  --accent: #00b894;
+  --danger: #e17055;
+  --radius: 16px;
+  --shadow: 0 4px 16px rgba(34, 41, 58, 0.08);
+
+  --c-happiness: #f6b93b;
+  --c-stress: #e17055;
+  --c-health: #2ecc71;
+  --c-money: #4aa3f0;
+  --c-relationship: #e84393;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP",
+    "Yu Gothic", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  min-height: 100dvh;
+}
+
+.hidden { display: none !important; }
+
+.screen { min-height: 100dvh; }
+
+/* ---------- ボタン ---------- */
+.btn {
+  display: inline-block;
+  border: none;
+  border-radius: 999px;
+  padding: 14px 40px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn:active { transform: scale(0.96); }
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: #fff;
+  box-shadow: 0 6px 18px rgba(108, 92, 231, 0.35);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--primary);
+  border: 2px solid var(--primary);
+  margin-top: 10px;
+}
+
+/* ---------- タイトル画面 ---------- */
+#title-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: linear-gradient(160deg, #eef1ff 0%, #f6fbf7 60%, #fff7ec 100%);
+}
+
+.title-card {
+  text-align: center;
+  max-width: 480px;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(8px);
+  border-radius: 24px;
+  padding: 40px 28px;
+  box-shadow: var(--shadow);
+}
+
+.title-emoji { font-size: 3.4rem; }
+
+.title-logo {
+  font-size: 2.1rem;
+  letter-spacing: 0.04em;
+  margin: 8px 0 4px;
+}
+.title-logo span {
+  color: var(--primary);
+  font-size: 2.4rem;
+  margin-left: 2px;
+}
+
+.title-sub {
+  color: var(--text-sub);
+  font-size: 0.85rem;
+  margin-bottom: 20px;
+}
+
+.title-desc {
+  background: var(--surface-2);
+  border-radius: var(--radius);
+  padding: 16px;
+  font-size: 0.85rem;
+  color: var(--text-sub);
+  margin-bottom: 24px;
+}
+.title-desc p + p { margin-top: 8px; }
+
+/* ---------- ゲーム画面ヘッダー ---------- */
+#game-screen {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 12px 14px calc(24px + env(safe-area-inset-bottom));
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--bg);
+  padding: 8px 0 6px;
+}
+
+.week-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.week-label { font-size: 1.15rem; font-weight: 800; }
+.turn-label { font-size: 0.75rem; color: var(--text-sub); font-weight: 700; }
+
+.turn-progress {
+  height: 6px;
+  border-radius: 3px;
+  background: #e2e6f0;
+  margin-top: 6px;
+  overflow: hidden;
+}
+#turn-progress-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--primary), var(--accent));
+  transition: width 0.4s ease;
+}
+
+/* ---------- ステータスパネル ---------- */
+.stats-panel {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.stat-item {
+  background: var(--surface);
+  border-radius: 12px;
+  padding: 8px 12px;
+  box-shadow: var(--shadow);
+}
+
+.stat-head {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+.stat-value { font-variant-numeric: tabular-nums; }
+
+.stat-bar {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--surface-2);
+  margin-top: 4px;
+  overflow: hidden;
+}
+.stat-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.4s ease, background 0.3s;
+}
+
+.stat-item.money-item {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.money-value { font-size: 1.05rem; font-weight: 800; color: var(--c-money); }
+.money-value.debt { color: var(--danger); }
+
+/* 変化アニメーション */
+@keyframes statPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+  100% { transform: scale(1); }
+}
+.stat-item.pulse { animation: statPulse 0.4s ease; }
+
+/* ---------- バッジ ---------- */
+.badges-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+  min-height: 26px;
+}
+.badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: var(--shadow);
+  color: var(--primary-dark);
+}
+
+/* ---------- メインエリア ---------- */
+.main-area { margin-top: 12px; }
+
+.panel-title {
+  font-size: 0.95rem;
+  margin-bottom: 8px;
+}
+
+.log-panel {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 14px;
+  box-shadow: var(--shadow);
+  margin-bottom: 14px;
+}
+
+.log-list {
+  max-height: 180px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.85rem;
+}
+
+.log-entry {
+  background: var(--surface-2);
+  border-radius: 10px;
+  padding: 8px 12px;
+  animation: fadeIn 0.3s ease;
+}
+.log-entry .log-week {
+  font-size: 0.7rem;
+  color: var(--text-sub);
+  font-weight: 700;
+  margin-right: 6px;
+}
+.log-entry.log-event { border-left: 4px solid var(--primary); }
+.log-entry.log-warn { border-left: 4px solid var(--danger); }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ---------- 行動カード ---------- */
+.actions-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.action-card {
+  background: var(--surface);
+  border: 2px solid transparent;
+  border-radius: var(--radius);
+  padding: 14px 12px;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  transition: transform 0.15s, border-color 0.15s;
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+.action-card:hover { border-color: var(--primary); }
+.action-card:active { transform: scale(0.97); }
+.action-card:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.action-emoji { font-size: 1.6rem; }
+.action-name { font-weight: 800; font-size: 0.95rem; margin-top: 2px; }
+.action-desc {
+  font-size: 0.72rem;
+  color: var(--text-sub);
+  margin-top: 2px;
+  line-height: 1.45;
+}
+
+/* ---------- モーダル ---------- */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 24, 40, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 100;
+}
+
+.modal-card {
+  background: var(--surface);
+  border-radius: 20px;
+  padding: 28px 24px;
+  max-width: 420px;
+  width: 100%;
+  text-align: center;
+  animation: popIn 0.25s ease;
+  max-height: 85dvh;
+  overflow-y: auto;
+}
+
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.modal-emoji { font-size: 3rem; }
+.modal-title { font-size: 1.2rem; margin: 8px 0; }
+.modal-text { font-size: 0.9rem; color: var(--text-sub); margin-bottom: 14px; }
+
+.modal-effects {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 18px;
+}
+.effect-chip {
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--surface-2);
+}
+.effect-chip.up { color: #0a8f5b; }
+.effect-chip.down { color: var(--danger); }
+
+/* ---------- エンディング ---------- */
+.ending-grade {
+  font-size: 3rem;
+  font-weight: 900;
+  color: var(--primary);
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.ending-stats {
+  text-align: left;
+  background: var(--surface-2);
+  border-radius: var(--radius);
+  padding: 14px;
+  font-size: 0.82rem;
+  margin-bottom: 18px;
+}
+.ending-stats .row {
+  display: flex;
+  justify-content: space-between;
+  padding: 2px 0;
+}
+
+/* ---------- タブレット以上 ---------- */
+@media (min-width: 600px) {
+  .stats-panel { grid-template-columns: repeat(4, 1fr); }
+  .stat-item.money-item { grid-column: auto; display: block; }
+  .actions-grid { grid-template-columns: repeat(3, 1fr); }
+  .log-list { max-height: 220px; }
+}

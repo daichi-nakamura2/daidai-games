@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>勇気のしずくゲーム オンライン</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1>💧 勇気のしずくゲーム</h1>
+    <p class="tagline">本音を話して、心の器を満たそう</p>
+  </header>
+
+  <div id="global-error" class="error"></div>
+  <div id="pass-notice" class="pass-notice hidden"></div>
+
+  <!-- 開始画面 -->
+  <section id="screen-start">
+    <div class="card">
+      <h2>部屋を作成する</h2>
+      <input id="create-name" type="text" placeholder="あなたの名前" maxlength="20" />
+      <button id="btn-create" class="primary">部屋を作成する</button>
+    </div>
+    <div class="card">
+      <h2>部屋に参加する</h2>
+      <input id="join-code" type="text" placeholder="部屋コード（4文字）" maxlength="4" />
+      <input id="join-name" type="text" placeholder="あなたの名前" maxlength="20" />
+      <button id="btn-join" class="primary">参加する</button>
+    </div>
+    <div id="start-error" class="error"></div>
+    <div class="card rules">
+      <h2>あそびかた</h2>
+      <ol>
+        <li>お題カードを引いて、手番の人が<strong>1分以内</strong>で本音や体験を話す</li>
+        <li>ほかの全員が判定：<br>勇気があった <span class="coin-badge">+1</span>／とても勇気があった <span class="coin-badge">+2</span>／心を開いた <span class="coin-badge">+3</span></li>
+        <li>コインが「心の器」に入り、水位が上がっていく</li>
+        <li>話したくないお題は<strong>パス</strong>して次の人にまわせる（ペナルティなし）</li>
+        <li><strong>自分のターンで器をあふれさせた人が勝利！</strong></li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ロビー画面 -->
+  <section id="screen-lobby" class="hidden">
+    <div class="card">
+      <h2>部屋コード: <span id="lobby-code" class="room-code"></span></h2>
+      <p>このコードを参加者に伝えてください。</p>
+      <h3>参加者</h3>
+      <ul id="lobby-players" class="player-list"></ul>
+      <button id="btn-start-game" class="primary hidden">ゲームを開始する</button>
+      <p id="lobby-wait" class="muted hidden">ホストがゲームを開始するのを待っています…</p>
+    </div>
+  </section>
+
+  <!-- ゲーム画面 -->
+  <section id="screen-game" class="hidden">
+    <div class="game-layout">
+      <div class="game-main">
+
+        <div id="phase-topic" class="card phase hidden">
+          <p class="phase-label">お題カード</p>
+          <div class="topic-card" id="topic-text"></div>
+          <p class="speaker-line">話す人: <strong id="topic-speaker"></strong></p>
+          <button id="btn-start-speaking" class="primary hidden">話し始める（1分）</button>
+          <button id="btn-pass" class="secondary hidden">この質問はパス（次の人へ）</button>
+          <p class="pass-hint muted">※答えたくないお題は気軽にパスできます</p>
+          <p id="topic-wait" class="muted hidden">話し手が始めるのを待っています…</p>
+        </div>
+
+        <div id="phase-speaking" class="card phase hidden">
+          <p class="phase-label">発表タイム</p>
+          <div class="topic-card small" id="speaking-topic"></div>
+          <p class="speaker-line"><strong id="speaking-speaker"></strong> さんが話しています</p>
+          <div id="timer-display" class="timer">1:00</div>
+          <button id="btn-end-speaking" class="secondary hidden">話し終わった</button>
+        </div>
+
+        <div id="phase-judging" class="card phase hidden">
+          <p class="phase-label">判定タイム</p>
+          <p class="speaker-line"><strong id="judging-speaker"></strong> さんの話はどうでしたか？</p>
+          <div id="judge-buttons" class="judge-buttons">
+            <button class="judge-btn" data-value="1">勇気があった<span class="coin-badge">+1</span></button>
+            <button class="judge-btn" data-value="2">とても勇気があった<span class="coin-badge">+2</span></button>
+            <button class="judge-btn" data-value="3">心を開いた<span class="coin-badge">+3</span></button>
+          </div>
+          <p id="judging-self" class="muted hidden">みんなの判定を待っています…ドキドキ</p>
+          <p id="judge-progress" class="muted"></p>
+        </div>
+
+        <div id="phase-result" class="card phase hidden">
+          <p class="phase-label">判定結果</p>
+          <p class="result-line"><strong id="result-speaker"></strong> さんに <span id="result-gained" class="gained"></span> 枚のしずくコイン！</p>
+          <ul id="result-breakdown" class="breakdown"></ul>
+          <button id="btn-next-turn" class="primary hidden">次の人へ</button>
+          <button id="btn-end-game" class="secondary hidden">ゲームを終了する</button>
+          <p id="result-wait" class="muted hidden">ホストが次に進めるのを待っています…</p>
+        </div>
+
+        <div id="phase-ended" class="card phase hidden">
+          <div id="ended-winner"></div>
+          <h3>しずくコイン獲得数</h3>
+          <ol id="final-ranking" class="ranking"></ol>
+          <button id="btn-back-lobby" class="primary hidden">もう一度あそぶ</button>
+        </div>
+
+      </div>
+
+      <aside class="game-side">
+        <div class="card vessel-card">
+          <h3>心の器</h3>
+          <div class="vessel-wrap">
+            <div id="overflow-drops" class="overflow-drops hidden">💧💧💧</div>
+            <div class="vessel">
+              <div id="vessel-water" class="water"></div>
+              <div id="coin-layer" class="coin-layer"></div>
+            </div>
+          </div>
+          <p class="vessel-count"><span id="vessel-coins">0</span> / <span id="vessel-capacity">0</span> 枚</p>
+        </div>
+        <div class="card">
+          <h3>プレイヤー <span class="muted">(部屋: <span id="game-code-label"></span>)</span></h3>
+          <ul id="scoreboard" class="player-list"></ul>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

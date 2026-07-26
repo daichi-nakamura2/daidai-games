@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>だいだいゲームズ</title>
+    <meta
+      name="description"
+      content="だいだいゲームズ — 心がちょっと軽くなる、手づくりのゲームたち。ブラウザだけですぐ遊べます。"
+    />
+    <meta property="og:title" content="だいだいゲームズ" />
+    <meta
+      property="og:description"
+      content="心がちょっと軽くなる、手づくりのゲームたち。ブラウザだけですぐ遊べます。"
+    />
+    <meta property="og:type" content="website" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header class="hero">
+      <p class="hero-logo">🍊</p>
+      <h1>だいだいゲームズ</h1>
+      <p class="hero-sub">心がちょっと軽くなる、手づくりのゲームたち。</p>
+      <p class="hero-note">ダウンロード不要。ブラウザだけですぐ遊べます。</p>
+    </header>
+
+    <main>
+      <!-- カードは /api/games の内容から組み立てる -->
+      <div id="game-list" class="game-list" aria-live="polite">
+        <p class="loading">読み込み中…</p>
+      </div>
+    </main>
+
+    <footer>
+      <p>© だいだいゲームズ</p>
+    </footer>
+
+    <script src="app.js"></script>
+  </body>
+</html>

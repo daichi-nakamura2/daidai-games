@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>9マス式ライティングゲーム</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1>✍️ 9マス式ライティングゲーム</h1>
+    <p class="tagline">「何を書くか」ではなく「どの質問に答えるか」。答えるだけで文章が完成する。</p>
+  </header>
+
+  <div id="global-error" class="error"></div>
+
+  <!-- 開始画面 -->
+  <section id="screen-start">
+    <div class="card">
+      <h2>部屋を作成する（ファシリテーター）</h2>
+      <input id="create-name" type="text" placeholder="あなたの名前" maxlength="20" />
+      <button id="btn-create" class="primary">部屋を作成する</button>
+    </div>
+    <div class="card">
+      <h2>部屋に参加する（プレイヤー）</h2>
+      <input id="join-code" type="text" placeholder="部屋コード（4文字）" maxlength="4" />
+      <input id="join-name" type="text" placeholder="あなたの名前" maxlength="20" />
+      <button id="btn-join" class="primary">参加する</button>
+    </div>
+    <div id="start-error" class="error"></div>
+    <div class="card rules">
+      <h2>あそびかた</h2>
+      <ol>
+        <li>ファシリテーターが<strong>テーマ</strong>を発表</li>
+        <li>各プレイヤーが<strong>9マスの質問</strong>に答える（AIは質問だけ。文章は書きません）</li>
+        <li><strong>テンプレート</strong>を選ぶと、自分の答えが順番に並んで<strong>下書き</strong>になる</li>
+        <li>下書きを整えて<strong>文章を完成</strong>させる</li>
+        <li>ひとりずつ<strong>発表</strong>し、ほかの全員が採点（5項目×2点＝10点）</li>
+        <li>基本点60点＋投票40点＝<strong>100点満点</strong>で称号が決まる！</li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ロビー画面 -->
+  <section id="screen-lobby" class="hidden">
+    <div class="card">
+      <h2>部屋コード: <span id="lobby-code" class="room-code"></span></h2>
+      <p>このコードを参加者に伝えてください。</p>
+      <h3>参加者</h3>
+      <ul id="lobby-players" class="player-list"></ul>
+
+      <div id="lobby-host" class="hidden">
+        <h3>テーマを決める</h3>
+        <select id="theme-select" class="select"></select>
+        <input id="theme-input" type="text" placeholder="テーマ（空欄ならランダム）" maxlength="40" />
+
+        <h3>質問セット（テーマに合わせて9問が変わります）</h3>
+        <select id="set-select" class="select"></select>
+        <p id="set-desc" class="muted"></p>
+        <details class="set-preview">
+          <summary>この9つの質問を見る</summary>
+          <ol id="set-preview-list" class="set-preview-list"></ol>
+        </details>
+
+        <button id="btn-start-writing" class="primary">記入タイムを始める</button>
+      </div>
+      <p id="lobby-wait" class="muted hidden">ファシリテーターが始めるのを待っています…</p>
+    </div>
+  </section>
+
+  <!-- 記入画面（プレイヤー） -->
+  <section id="screen-writing" class="hidden">
+    <div class="theme-banner">
+      テーマ：<strong id="writing-theme"></strong>
+    </div>
+
+    <!-- ファシリテーター用ダッシュボード -->
+    <div id="facilitator-panel" class="card hidden">
+      <h2>🧭 ファシリテーター画面</h2>
+      <p class="muted">参加人数 <span id="fac-count"></span> 人 ／ 全員の進み具合</p>
+      <ul id="fac-list" class="fac-list"></ul>
+      <button id="btn-end-writing" class="primary">終了 → みんなで発表へ</button>
+    </div>
+
+    <!-- 自分の記入エリア -->
+    <div class="card">
+      <p class="phase-label">STEP 1 ── 9マスの質問に答える</p>
+      <div id="grid" class="grid"></div>
+      <p class="muted grid-progress"><span id="grid-filled">0</span> / 9 マス記入済み</p>
+    </div>
+
+    <div class="card">
+      <p class="phase-label">STEP 2 ── テンプレートを選ぶ</p>
+      <div id="template-choices" class="template-choices"></div>
+    </div>
+
+    <div class="card">
+      <p class="phase-label">STEP 3 ── 文章を完成させる</p>
+      <p class="muted">下のボタンで、あなたの答えを選んだ型に並べた下書きを作れます。自由に書き直してOK。</p>
+      <button id="btn-compose" class="secondary" disabled>選んだ型で下書きを作る</button>
+      <textarea id="final-text" placeholder="ここに文章を書きます（下書きを直してもOK）"></textarea>
+      <button id="btn-submit-final" class="primary">この文章で完成！</button>
+      <p id="writing-done" class="done-badge hidden">✅ 完成済み（発表を待っています）</p>
+    </div>
+  </section>
+
+  <!-- 発表画面 -->
+  <section id="screen-presenting" class="hidden">
+    <div class="theme-banner">テーマ：<strong id="present-theme"></strong></div>
+    <div class="card">
+      <p class="phase-label"><span id="present-counter"></span> 人目の発表</p>
+      <h2 id="present-name" class="present-name"></h2>
+
+      <!-- 発表者本人 -->
+      <div id="present-self" class="hidden">
+        <p class="muted">あなたの番です。下の文章を声に出して発表しましょう📣</p>
+      </div>
+
+      <div class="present-text" id="present-text"></div>
+
+      <details class="present-cells">
+        <summary>元になった9つの答えを見る</summary>
+        <ul id="present-cell-list" class="cell-list"></ul>
+      </details>
+
+      <!-- 投票（発表者以外） -->
+      <div id="vote-area" class="hidden">
+        <p class="phase-label">この文章を採点する（各 0〜2点）</p>
+        <div id="vote-rows"></div>
+        <p class="vote-total">合計 <span id="vote-total">0</span> / 10 点</p>
+        <button id="btn-vote" class="primary">この点数で投票する</button>
+        <p id="vote-done" class="done-badge hidden">✅ 投票しました</p>
+      </div>
+
+      <p id="vote-progress" class="muted"></p>
+      <button id="btn-next-presenter" class="secondary hidden">投票を締めて次へ</button>
+    </div>
+  </section>
+
+  <!-- ランキング画面 -->
+  <section id="screen-ranking" class="hidden">
+    <div class="card">
+      <div id="ranking-winner"></div>
+      <h3>最終ランキング</h3>
+      <ol id="ranking-list" class="ranking"></ol>
+      <button id="btn-back-lobby" class="primary hidden">もう一度あそぶ（新しいテーマ）</button>
+      <p id="ranking-wait" class="muted hidden">ファシリテーターの操作を待っています…</p>
+    </div>
+  </section>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

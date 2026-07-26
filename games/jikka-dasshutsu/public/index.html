@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>実家がしんどい大脱出ゲーム Case1 父の再婚</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ゲーム画面全体（背景レイヤーを兼ねる） -->
+  <div id="screen" class="screen bg-home">
+
+    <!-- ============================================================
+         タイトル画面
+         ============================================================ -->
+    <div id="title-screen">
+      <p class="title-case">CASE 1</p>
+      <h1 class="title-main">実家がしんどい<br />大脱出ゲーム</h1>
+      <p class="title-sub">― 父の再婚 ―</p>
+      <p class="title-theme">テーマ：<span>初動を間違えない</span></p>
+      <div class="title-buttons">
+        <button id="btn-start" class="btn btn-primary">はじめから</button>
+        <button id="btn-continue" class="btn btn-secondary">つづきから</button>
+      </div>
+    </div>
+
+    <!-- ============================================================
+         ゲーム進行画面（最初は hidden）
+         ============================================================ -->
+    <div id="scene" class="hidden">
+
+      <!-- 上部バー：章ラベル ＋ メニュー -->
+      <div class="topbar">
+        <span id="day-label"></span>
+        <div class="menu-buttons">
+          <button id="btn-save" class="btn btn-mini">セーブ</button>
+          <button id="btn-title" class="btn btn-mini">タイトル</button>
+        </div>
+      </div>
+
+      <!-- ステータス表示（JSが中身を生成） -->
+      <div id="status-panel"></div>
+
+      <!-- 本文・話者・選択肢 -->
+      <div id="text-container">
+        <div class="text-panel">
+          <span id="speaker" class="hidden"></span>
+          <p id="text-body"></p>
+          <span id="next-hint">▼ タップでつぎへ</span>
+          <div id="choices"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- トースト通知（セーブ完了など） -->
+  <div id="toast"></div>
+
+  <!-- スクリプト：シナリオデータ → エンジンの順で読み込む -->
+  <script src="game-data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,370 @@
+/* =========================================================================
+ * style.css
+ * -------------------------------------------------------------------------
+ * 「実家がしんどい大脱出ゲーム Case1」の見た目。
+ * 仕様書どおり「背景だけ・立ち絵なし・BGMなし」。
+ * 背景は画像を使わず、CSSグラデーションでシーンごとの雰囲気を出す。
+ * スマホ縦画面での操作を主に想定したレイアウト。
+ * ========================================================================= */
+
+/* ---- 全体リセットと基本設定 ---- */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --panel-bg: rgba(15, 18, 28, 0.82); /* テキスト枠の半透明背景 */
+  --accent: #e8b04b;                  /* アクセント（金色）*/
+  --text-main: #f4f1ea;
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", sans-serif;
+  color: var(--text-main);
+  background: #0a0a0f;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+/* =========================================================================
+ * 画面（背景レイヤー）
+ * ======================================================================= */
+.screen {
+  position: relative;
+  width: 100%;
+  height: 100dvh;              /* スマホのアドレスバー込みで画面いっぱい */
+  max-width: 720px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  transition: background 0.8s ease; /* 背景切り替えをふわっと */
+  overflow: hidden;
+}
+
+/* ---- シーン別の背景グラデーション ---- */
+.bg-home     { background: linear-gradient(160deg, #3a4a5a, #232b36 70%); }   /* 実家・室内 */
+.bg-hospital { background: linear-gradient(160deg, #5a6b78, #333c46 70%); }   /* 病院（無機質）*/
+.bg-void     { background: radial-gradient(circle at 50% 40%, #f8f8ff, #c8ccd8); } /* 白い空間 */
+.bg-cafe     { background: linear-gradient(160deg, #7a5c3e, #3e2c1c 70%); }   /* カフェ・面会 */
+.bg-office   { background: linear-gradient(160deg, #46586a, #202832 70%); }   /* 事務所・相談 */
+.bg-dawn     { background: linear-gradient(160deg, #f6b884, #e88fa0 60%, #8a6db0); } /* 夜明け（TRUE）*/
+.bg-dusk     { background: linear-gradient(160deg, #d98f6b, #5a4a6a 80%); }   /* 夕暮れ（NORMAL）*/
+.bg-night    { background: linear-gradient(160deg, #1a1e2a, #05060a 70%); }   /* 夜（BAD）*/
+
+/* 白背景の空間だけ、文字が読めるよう本文の色調整はJS側の枠でカバー */
+
+/* ゲーム進行画面は画面いっぱいの縦フレックス。
+   これで本文枠(#text-container)の margin-top:auto が効き、下寄せになる。 */
+#scene {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* =========================================================================
+ * タイトル画面
+ * ======================================================================= */
+#title-screen {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 24px;
+  background: linear-gradient(170deg, #2a3340, #14181f 70%);
+}
+
+.title-case {
+  font-size: 0.9rem;
+  letter-spacing: 0.3em;
+  color: var(--accent);
+  margin-bottom: 12px;
+}
+
+.title-main {
+  font-size: clamp(1.6rem, 7vw, 2.4rem);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  margin-bottom: 8px;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
+}
+
+.title-sub {
+  font-size: 1.1rem;
+  color: #cbd2dc;
+  margin-bottom: 6px;
+}
+
+.title-theme {
+  font-size: 0.85rem;
+  color: #9aa4b2;
+  margin-bottom: 40px;
+}
+
+.title-theme span {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.title-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+  max-width: 280px;
+}
+
+/* =========================================================================
+ * 章ラベル・トップバー
+ * ======================================================================= */
+.topbar {
+  position: relative;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+}
+
+#day-label {
+  font-size: 0.85rem;
+  letter-spacing: 0.25em;
+  color: var(--accent);
+  font-weight: 700;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
+}
+
+.menu-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+/* =========================================================================
+ * ステータスパネル
+ * ======================================================================= */
+#status-panel {
+  position: relative;
+  z-index: 5;
+  padding: 4px 16px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.status-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.72rem;
+}
+
+.status-label {
+  width: 5.5em;
+  flex-shrink: 0;
+  color: #dfe4ec;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+.status-bar-wrap {
+  flex: 1;
+  height: 8px;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.status-bar {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.5s ease; /* 変動をアニメーション */
+}
+
+.bar-good { background: linear-gradient(90deg, #4fb477, #7ce0a0); } /* 良い＝緑 */
+.bar-risk { background: linear-gradient(90deg, #d16a6a, #e89a5a); } /* 悪い＝赤橙 */
+
+.status-num {
+  width: 2em;
+  text-align: right;
+  flex-shrink: 0;
+  color: #eef2f7;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+/* =========================================================================
+ * 本文テキスト枠
+ * ======================================================================= */
+#text-container {
+  position: relative;
+  z-index: 5;
+  margin-top: auto;         /* 下寄せ */
+  padding: 16px;
+}
+
+.text-panel {
+  background: var(--panel-bg);
+  border: 1px solid rgba(232, 176, 75, 0.35);
+  border-radius: 14px;
+  padding: 18px 20px 20px;
+  backdrop-filter: blur(4px);
+  min-height: 180px;
+  display: flex;
+  flex-direction: column;
+}
+
+#speaker {
+  display: inline-block;
+  align-self: flex-start;
+  background: var(--accent);
+  color: #1a1a1a;
+  font-weight: 700;
+  font-size: 0.9rem;
+  padding: 2px 14px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+
+#text-body {
+  font-size: 1.02rem;
+  flex: 1;
+}
+
+/* 「▼ タップでつぎへ」ヒント */
+#next-hint {
+  align-self: flex-end;
+  margin-top: 8px;
+  font-size: 0.8rem;
+  color: var(--accent);
+  animation: blink 1.2s ease-in-out infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 0.35; }
+  50%      { opacity: 1; }
+}
+
+/* =========================================================================
+ * 選択肢
+ * ======================================================================= */
+#choices {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.choice-btn {
+  width: 100%;
+  padding: 13px 16px;
+  font-size: 1rem;
+  font-family: inherit;
+  color: var(--text-main);
+  background: rgba(40, 46, 60, 0.9);
+  border: 1px solid rgba(232, 176, 75, 0.5);
+  border-radius: 10px;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.choice-btn:hover {
+  background: rgba(232, 176, 75, 0.9);
+  color: #1a1a1a;
+}
+
+.choice-btn:active {
+  transform: scale(0.98);
+}
+
+/* =========================================================================
+ * 汎用ボタン（タイトル・メニュー）
+ * ======================================================================= */
+.btn {
+  font-family: inherit;
+  cursor: pointer;
+  border-radius: 10px;
+  transition: background 0.15s ease, opacity 0.15s ease;
+}
+
+.btn-primary {
+  padding: 14px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  background: var(--accent);
+  border: none;
+}
+
+.btn-primary:hover { background: #f2c56a; }
+
+.btn-secondary {
+  padding: 14px;
+  font-size: 1rem;
+  color: var(--text-main);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.btn-secondary:hover { background: rgba(255, 255, 255, 0.16); }
+
+.btn-mini {
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  color: var(--text-main);
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.btn-mini:hover { background: rgba(0, 0, 0, 0.65); }
+
+.is-disabled,
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* =========================================================================
+ * トースト通知
+ * ======================================================================= */
+#toast {
+  position: fixed;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: rgba(0, 0, 0, 0.85);
+  color: #fff;
+  padding: 10px 22px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  z-index: 30;
+}
+
+#toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* =========================================================================
+ * ユーティリティ
+ * ======================================================================= */
+.hidden {
+  display: none !important;
+}
+
+/* PCなど広い画面では、枠を大きくしすぎない */
+@media (min-width: 721px) {
+  #text-body { font-size: 1.08rem; }
+}

@@ -1,0 +1,25 @@
+{
+  "name": "読書クエスト",
+  "short_name": "読書クエスト",
+  "description": "読書をRPG化!ミッションカードを引いて15分の読書クエストに挑戦。学びをメモしてEXPを獲得、レベルアップしよう。",
+  "lang": "ja",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#fffbeb",
+  "theme_color": "#f59e0b",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+# Render にデプロイするのはこのプロジェクト1つだけ。
+# ゲームを増やしてもサービスは増やさない（games/ にフォルダを足すだけ）。
+services:
+  - type: web
+    name: daidai-games
+    runtime: node
+    plan: free
+    region: singapore
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_VERSION
+        value: "20"

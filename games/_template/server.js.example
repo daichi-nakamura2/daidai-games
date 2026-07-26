@@ -1,0 +1,40 @@
+// ============================================================
+// 通信ありのゲームだけ、このファイルを server.js にリネームして使う。
+// （通信がいらないゲームは server.js を置かなくてよい）
+//
+// 共通サーバー(../../server.js)が起動時にこの register を呼ぶ。
+// ============================================================
+
+// 共通サーバーから渡される、このゲーム専用の Socket.io ネームスペース。
+let io = null;
+
+/** @type {Map<string, object>} 部屋コード -> 部屋 */
+const rooms = new Map();
+
+function onConnection(socket) {
+  socket.on("createRoom", ({ name }) => {
+    // 例: 部屋をつくって参加させる
+    // socket.join(code);
+    // io.to(code).emit("roomUpdate", ...);
+  });
+
+  socket.on("disconnect", () => {
+    // 後片付け
+  });
+}
+
+/**
+ * 共通サーバーから呼ばれる登録関数。
+ * @param {object} ctx
+ * @param {import("socket.io").Namespace} ctx.nsp  このゲーム専用のネームスペース
+ * @param {import("express").Router} ctx.router    /games/<ゲーム名> 配下のAPIを足したいとき
+ * @param {string} ctx.slug                        フォルダ名
+ * @param {string} ctx.publicDir                   このゲームの public/ の絶対パス
+ */
+module.exports = function register({ nsp, router }) {
+  io = nsp;
+  io.on("connection", onConnection);
+
+  // HTTPのAPIを生やしたいときは router を使う（→ /games/<ゲーム名>/api/hello）
+  // router.get("/api/hello", (req, res) => res.json({ ok: true }));
+};
