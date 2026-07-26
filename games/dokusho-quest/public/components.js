@@ -227,7 +227,8 @@ const DQ_RARITY_BADGE = {
   epic: "bg-purple-200 text-purple-700 dark:bg-purple-800 dark:text-purple-200",
 };
 
-DQ.MissionDraw = function MissionDraw({ book, onStart, onBack }) {
+// hideTime を渡すと読書時間の選択を隠す(読書会モード=共有タイマーで時間を決めるとき)
+DQ.MissionDraw = function MissionDraw({ book, onStart, onBack, hideTime }) {
   const [mission, setMission] = React.useState(null);
   const [minutes, setMinutes] = React.useState(DQ.SESSION_OPTIONS[0]);
 
@@ -274,27 +275,29 @@ DQ.MissionDraw = function MissionDraw({ book, onStart, onBack }) {
             </p>
           </div>
 
-          <div>
-            <p className="text-sm font-bold text-stone-600 dark:text-stone-300">
-              ⏱ 今日の読書時間
-            </p>
-            <div className="mt-2 flex justify-center gap-2">
-              {DQ.SESSION_OPTIONS.map((m) => (
-                <button
-                  key={m}
-                  type="button"
-                  onClick={() => setMinutes(m)}
-                  className={
-                    minutes === m
-                      ? "rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-2 text-sm font-bold text-white shadow"
-                      : "rounded-full border-2 border-amber-300 bg-white/70 px-4 py-2 text-sm font-bold text-stone-500 transition hover:bg-amber-50 active:scale-95 dark:border-stone-600 dark:bg-stone-800/70 dark:text-stone-400 dark:hover:bg-stone-700"
-                  }
-                >
-                  {m}分
-                </button>
-              ))}
+          {!hideTime && (
+            <div>
+              <p className="text-sm font-bold text-stone-600 dark:text-stone-300">
+                ⏱ 今日の読書時間
+              </p>
+              <div className="mt-2 flex justify-center gap-2">
+                {DQ.SESSION_OPTIONS.map((m) => (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => setMinutes(m)}
+                    className={
+                      minutes === m
+                        ? "rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-2 text-sm font-bold text-white shadow"
+                        : "rounded-full border-2 border-amber-300 bg-white/70 px-4 py-2 text-sm font-bold text-stone-500 transition hover:bg-amber-50 active:scale-95 dark:border-stone-600 dark:bg-stone-800/70 dark:text-stone-400 dark:hover:bg-stone-700"
+                    }
+                  >
+                    {m}分
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="flex justify-center gap-3">
             <button
@@ -306,10 +309,10 @@ DQ.MissionDraw = function MissionDraw({ book, onStart, onBack }) {
             </button>
             <button
               type="button"
-              onClick={() => onStart(mission, minutes)}
+              onClick={() => onStart(mission, hideTime ? undefined : minutes)}
               className="rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-6 py-2 font-bold text-white shadow transition hover:brightness-110 active:scale-95"
             >
-              クエスト開始!
+              {hideTime ? "このカードで読む" : "クエスト開始!"}
             </button>
           </div>
         </div>

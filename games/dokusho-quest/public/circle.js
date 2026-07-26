@@ -264,8 +264,112 @@ function FeedItem({ output, selfId, onGift }) {
   );
 }
 
+// ---------- 読書会:みんなで一斉に読書するタイマー ----------
+function ReadingSession({ session, isHost, onStart, onStop }) {
+  const [remaining, setRemaining] = React.useState(0);
+  const [pick, setPick] = React.useState(DQ.SESSION_OPTIONS[0]);
+
+  // サーバーから届いた残り時間に合わせて、毎回カウントダウンを取り直す
+  React.useEffect(() => {
+    if (!session) {
+      setRemaining(0);
+      return;
+    }
+    const endsAt = Date.now() + session.remainingMs;
+    const tick = () => setRemaining(Math.max(0, endsAt - Date.now()));
+    tick();
+    const id = setInterval(tick, 250);
+    return () => clearInterval(id);
+  }, [session]);
+
+  const active = session && remaining > 0;
+  const mm = Math.floor(remaining / 60000);
+  const ss = Math.floor((remaining % 60000) / 1000);
+
+  if (active) {
+    return (
+      <section className="rounded-2xl border-2 border-amber-400 bg-gradient-to-br from-amber-100 to-orange-100 p-5 text-center shadow-md dark:border-amber-700 dark:from-stone-800 dark:to-amber-950">
+        <p className="text-sm font-bold text-amber-700 dark:text-amber-300">
+          🔥 みんなで読書中!
+        </p>
+        <p className="font-pixel mt-1 text-5xl text-stone-800 tabular-nums sm:text-6xl dark:text-amber-100">
+          {mm}:{String(ss).padStart(2, "0")}
+        </p>
+        <p className="mt-1 text-xs text-stone-500 dark:text-stone-400">
+          全員でいっしょに集中しよう(残り時間)
+        </p>
+        {isHost && (
+          <button
+            type="button"
+            onClick={onStop}
+            className="mt-3 rounded-full border-2 border-amber-400 bg-white/70 px-5 py-2 text-sm font-bold text-amber-700 transition hover:bg-amber-50 active:scale-95 dark:bg-stone-800/70 dark:text-amber-300"
+          >
+            ⏹ 読書タイムを終える
+          </button>
+        )}
+      </section>
+    );
+  }
+
+  // タイマーが動いていないとき
+  return (
+    <section className="rounded-2xl border-2 border-amber-300 bg-white/80 p-5 text-center shadow-md dark:border-amber-700 dark:bg-stone-800/80">
+      <p className="font-pixel text-lg text-stone-800 dark:text-amber-100">
+        ⏱ みんなで読書タイム
+      </p>
+      {session && (
+        <p className="mt-1 text-sm font-bold text-amber-600 dark:text-amber-400">
+          読書タイムが終了しました!アウトプットを投稿しよう
+        </p>
+      )}
+      {isHost ? (
+        <div className="mt-3 space-y-3">
+          <div className="flex justify-center gap-2">
+            {DQ.SESSION_OPTIONS.map((m) => (
+              <button
+                key={m}
+                type="button"
+                onClick={() => setPick(m)}
+                className={
+                  pick === m
+                    ? "rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-2 text-sm font-bold text-white shadow"
+                    : "rounded-full border-2 border-amber-300 bg-white/70 px-4 py-2 text-sm font-bold text-stone-500 transition hover:bg-amber-50 active:scale-95 dark:border-stone-600 dark:bg-stone-800/70 dark:text-stone-400"
+                }
+              >
+                {m}分
+              </button>
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={() => onStart(pick)}
+            className="w-full rounded-full bg-gradient-to-r from-amber-500 to-orange-500 py-3 font-pixel text-white shadow transition hover:brightness-110 active:scale-95"
+          >
+            ▶ よーいドン!({pick}分)
+          </button>
+          <p className="text-xs text-stone-500 dark:text-stone-400">
+            押すと部屋の全員のカウントダウンが一斉に始まります
+          </p>
+        </div>
+      ) : (
+        <p className="mt-2 text-sm text-stone-500 dark:text-stone-400">
+          ホストが読書タイムを始めるのを待っています…
+        </p>
+      )}
+    </section>
+  );
+}
+
 // ---------- 読書会:部屋のメイン画面 ----------
-function RoomView({ room, selfId, onStartQuest, onGift, onExit }) {
+function RoomView({
+  room,
+  selfId,
+  onStartQuest,
+  onGift,
+  onExit,
+  onStartReading,
+  onStopReading,
+}) {
   const [copied, setCopied] = React.useState(false);
   const [linkCopied, setLinkCopied] = React.useState(false);
   const me = room.players.find((p) => p.id === selfId);
@@ -329,15 +433,23 @@ function RoomView({ room, selfId, onStartQuest, onGift, onExit }) {
         </p>
       </section>
 
+      {/* みんなで一斉に読書するタイマー */}
+      <ReadingSession
+        session={room.session}
+        isHost={room.hostId === selfId}
+        onStart={onStartReading}
+        onStop={onStopReading}
+      />
+
       <Roster players={room.players} selfId={selfId} hostId={room.hostId} />
 
-      {/* クエスト開始 */}
+      {/* アウトプット投稿 */}
       <button
         type="button"
         onClick={onStartQuest}
         className="w-full rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 py-4 font-pixel text-lg text-white shadow-md transition hover:brightness-110 active:scale-95"
       >
-        📖 読書クエストを始める
+        ✍️ アウトプットを投稿する
       </button>
 
       {/* 共有フィード */}
@@ -470,6 +582,12 @@ DQ.CircleApp = function CircleApp({ theme, onToggleTheme, onExit, initialCode })
     });
   const giftXp = (outputId) =>
     socketRef.current.emit("giftXp", { outputId });
+  const startReading = (minutes) =>
+    socketRef.current.emit("startReading", { minutes });
+  const stopReading = () => socketRef.current.emit("stopReading");
+
+  // アウトプットの読書時間は「みんなで読書」の設定時間(なければ15分)
+  const readMinutes = (room && room.session && room.session.minutes) || 15;
 
   const submitOutput = (memo) => {
     socketRef.current.emit("submitOutput", {
@@ -477,14 +595,14 @@ DQ.CircleApp = function CircleApp({ theme, onToggleTheme, onExit, initialCode })
       missionIcon: quest.mission.icon,
       missionTitle: quest.mission.title,
       missionBonus: quest.mission.bonusXp,
-      minutes: quest.minutes,
+      minutes: readMinutes,
       memo,
     });
     // 自分の冒険ログにも記録を残す(EXPはサーバーが加算するのでここでは足さない)
     const { xpGained } = DQ.calcSessionXp({
       mission: quest.mission,
       memo,
-      minutes: quest.minutes,
+      minutes: readMinutes,
     });
     const d = DQ.loadGameData();
     DQ.saveGameData({
@@ -497,7 +615,7 @@ DQ.CircleApp = function CircleApp({ theme, onToggleTheme, onExit, initialCode })
           missionTitle: quest.mission.title,
           missionIcon: quest.mission.icon,
           memo: memo.trim(),
-          minutes: quest.minutes,
+          minutes: readMinutes,
           xpGained,
           date: new Date().toISOString(),
         },
@@ -562,28 +680,16 @@ DQ.CircleApp = function CircleApp({ theme, onToggleTheme, onExit, initialCode })
     );
   }
   if (questStep === "mission") {
+    // 読書会では時間は共有タイマーで決めるので、個別の時間選択は隠す
     return shell(
       <DQ.MissionDraw
         book={questBook}
-        onStart={(mission, sessionMinutes) => {
-          setQuest((q) => ({ ...q, mission, minutes: sessionMinutes }));
-          setQuestStep("timer");
-        }}
-        onBack={() => setQuestStep(null)}
-      />,
-    );
-  }
-  if (questStep === "timer") {
-    return shell(
-      <DQ.ReadingTimer
-        book={questBook}
-        mission={quest.mission}
-        sessionMinutes={quest.minutes}
-        onFinish={(minutes) => {
-          setQuest((q) => ({ ...q, minutes }));
+        hideTime
+        onStart={(mission) => {
+          setQuest((q) => ({ ...q, mission }));
           setQuestStep("memo");
         }}
-        onAbort={() => setQuestStep(null)}
+        onBack={() => setQuestStep(null)}
       />,
     );
   }
@@ -592,7 +698,7 @@ DQ.CircleApp = function CircleApp({ theme, onToggleTheme, onExit, initialCode })
       <DQ.MemoForm
         book={questBook}
         mission={quest.mission}
-        minutes={quest.minutes}
+        minutes={readMinutes}
         onComplete={submitOutput}
       />,
     );
@@ -606,6 +712,8 @@ DQ.CircleApp = function CircleApp({ theme, onToggleTheme, onExit, initialCode })
       onStartQuest={() => setQuestStep("book")}
       onGift={giftXp}
       onExit={onExit}
+      onStartReading={startReading}
+      onStopReading={stopReading}
     />,
   );
 };

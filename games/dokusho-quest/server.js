@@ -17,6 +17,7 @@ const MAX_NAME = 20;
 const MAX_TITLE = 60;
 const MAX_MEMO = 500;
 const MAX_MISSION = 60;
+const ALLOWED_MINUTES = [15, 25, 60, 90]; // みんなで読書の時間の選択肢
 
 /** @type {Map<string, object>} 部屋コード -> 部屋 */
 const rooms = new Map();
@@ -60,6 +61,8 @@ function createRoom(hostSocketId, hostName, totalXp) {
     players: new Map(),
     feed: [], // 読書アウトプットの配列(古い順)
     nextOutputId: 1,
+    session: null, // みんなで読書の共有タイマー { minutes, endsAt }
+    sessionTimeout: null, // 終了時に全員へ再通知するためのタイマー
   };
   room.players.set(hostSocketId, { name: hostName, totalXp, connected: true });
   rooms.set(code, room);
@@ -71,6 +74,13 @@ function publicState(room) {
   return {
     code: room.code,
     hostId: room.hostId,
+    // 共有読書タイマー(残り時間はブロードキャスト時点で計算して渡す)
+    session: room.session
+      ? {
+          minutes: room.session.minutes,
+          remainingMs: Math.max(0, room.session.endsAt - Date.now()),
+        }
+      : null,
     players: [...room.players.entries()].map(([id, p]) => ({
       id,
       name: p.name,
@@ -182,6 +192,34 @@ function onConnection(socket) {
     broadcastState(room);
   });
 
+  // ホストが「みんなで一斉に読書」を開始(全員が同じカウントダウンを見る)
+  socket.on("startReading", ({ minutes }) => {
+    const room = rooms.get(socket.data.roomCode);
+    if (!room || room.hostId !== socket.id) return;
+    const m = ALLOWED_MINUTES.includes(Number(minutes)) ? Number(minutes) : 15;
+    if (room.sessionTimeout) clearTimeout(room.sessionTimeout);
+    room.session = { minutes: m, endsAt: Date.now() + m * 60000 };
+    // 終了時にもう一度ブロードキャストして、全員のUIを「終了」に切り替える
+    room.sessionTimeout = setTimeout(() => {
+      room.sessionTimeout = null;
+      const r = rooms.get(room.code);
+      if (r) broadcastState(r);
+    }, m * 60000 + 500);
+    broadcastState(room);
+  });
+
+  // ホストが読書タイムを早めに終える
+  socket.on("stopReading", () => {
+    const room = rooms.get(socket.data.roomCode);
+    if (!room || room.hostId !== socket.id || !room.session) return;
+    if (room.sessionTimeout) {
+      clearTimeout(room.sessionTimeout);
+      room.sessionTimeout = null;
+    }
+    room.session.endsAt = Date.now(); // 残り0にして終了
+    broadcastState(room);
+  });
+
   socket.on("disconnect", () => {
     const room = rooms.get(socket.data.roomCode);
     if (!room) return;
@@ -199,6 +237,7 @@ function onConnection(socket) {
     // 全員切断したら部屋を破棄
     const anyConnected = [...room.players.values()].some((p) => p.connected);
     if (!anyConnected) {
+      if (room.sessionTimeout) clearTimeout(room.sessionTimeout);
       rooms.delete(room.code);
       return;
     }
