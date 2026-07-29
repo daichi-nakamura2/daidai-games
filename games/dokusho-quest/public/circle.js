@@ -360,16 +360,78 @@ function ReadingSession({ session, isHost, onStart, onStop }) {
   );
 }
 
-// ---------- 読書会:部屋のメイン画面 ----------
-function RoomView({
+// ---------- 読書会:カードを引いたあと「みんなで読書タイム」を待つ・進行する画面 ----------
+// 読書タイムが終わる(または host が終了する)と自動で感想画面(onDone)に進む
+function QuestReadingStep({
   room,
   selfId,
-  onStartQuest,
-  onGift,
-  onExit,
+  bookTitle,
+  mission,
   onStartReading,
   onStopReading,
+  onDone,
+  onCancel,
 }) {
+  const isHost = room.hostId === selfId;
+  // このカードで待ち始めてから、読書タイムが実際に動いているのを一度でも見たか
+  const sawActiveRef = React.useRef(false);
+
+  React.useEffect(() => {
+    const remaining = room.session ? room.session.remainingMs : 0;
+    if (remaining > 0) {
+      sawActiveRef.current = true;
+    } else if (sawActiveRef.current) {
+      // 動いていた読書タイムが終わった → 感想を書く画面へ
+      onDone();
+    }
+  }, [room.session]);
+
+  return (
+    <div className="animate-fade-up space-y-4 text-center">
+      <section className="rounded-2xl border-2 border-amber-300 bg-white/80 p-4 shadow-md dark:border-amber-700 dark:bg-stone-800/80">
+        <p className="text-sm text-stone-600 dark:text-stone-300">
+          📖『{bookTitle}』
+        </p>
+        <p className="mt-1 text-sm font-bold text-amber-700 dark:text-amber-300">
+          {mission.icon} {mission.title}
+        </p>
+      </section>
+
+      <ReadingSession
+        session={room.session}
+        isHost={isHost}
+        onStart={onStartReading}
+        onStop={onStopReading}
+      />
+
+      <p className="text-xs text-stone-500 dark:text-stone-400">
+        読書タイムが終わると、自動で感想を書く画面に進みます
+      </p>
+
+      <button
+        type="button"
+        onClick={onCancel}
+        className="text-sm text-stone-500 underline dark:text-stone-400"
+      >
+        ← やめて部屋にもどる
+      </button>
+    </div>
+  );
+}
+
+// ---------- 読書会:今まさに進行中の読書タイムがあれば知らせる帯 ----------
+function SessionBanner({ session }) {
+  if (!session || session.remainingMs <= 0) return null;
+  const mm = Math.floor(session.remainingMs / 60000);
+  return (
+    <p className="text-center text-sm font-bold text-amber-600 dark:text-amber-400">
+      🔥 いま読書タイム進行中(残り約{Math.max(1, mm)}分)・「アウトプットを投稿する」から参加できます
+    </p>
+  );
+}
+
+// ---------- 読書会:部屋のメイン画面 ----------
+function RoomView({ room, selfId, onStartQuest, onGift, onExit }) {
   const [copied, setCopied] = React.useState(false);
   const [linkCopied, setLinkCopied] = React.useState(false);
   const me = room.players.find((p) => p.id === selfId);
@@ -433,13 +495,7 @@ function RoomView({
         </p>
       </section>
 
-      {/* みんなで一斉に読書するタイマー */}
-      <ReadingSession
-        session={room.session}
-        isHost={room.hostId === selfId}
-        onStart={onStartReading}
-        onStop={onStopReading}
-      />
+      <SessionBanner session={room.session} />
 
       <Roster players={room.players} selfId={selfId} hostId={room.hostId} />
 
@@ -539,7 +595,7 @@ DQ.CircleApp = function CircleApp({ theme, onToggleTheme, onExit, initialCode })
   const [selfId, setSelfId] = React.useState(null);
   const [error, setError] = React.useState("");
 
-  // クエストのサブ画面: null | book | mission | timer | memo
+  // クエストのサブ画面: null | book | mission | waiting(読書タイム待ち) | memo
   const [questStep, setQuestStep] = React.useState(null);
   const [quest, setQuest] = React.useState({}); // { bookTitle, mission, minutes }
 
@@ -687,9 +743,24 @@ DQ.CircleApp = function CircleApp({ theme, onToggleTheme, onExit, initialCode })
         hideTime
         onStart={(mission) => {
           setQuest((q) => ({ ...q, mission }));
-          setQuestStep("memo");
+          setQuestStep("waiting");
         }}
         onBack={() => setQuestStep(null)}
+      />,
+    );
+  }
+  if (questStep === "waiting") {
+    // カードが決まったら、みんなで読書タイムが終わるのを待つ(ホストは開始もここから)
+    return shell(
+      <QuestReadingStep
+        room={room}
+        selfId={selfId}
+        bookTitle={quest.bookTitle}
+        mission={quest.mission}
+        onStartReading={startReading}
+        onStopReading={stopReading}
+        onDone={() => setQuestStep("memo")}
+        onCancel={() => setQuestStep(null)}
       />,
     );
   }
@@ -712,8 +783,6 @@ DQ.CircleApp = function CircleApp({ theme, onToggleTheme, onExit, initialCode })
       onStartQuest={() => setQuestStep("book")}
       onGift={giftXp}
       onExit={onExit}
-      onStartReading={startReading}
-      onStopReading={stopReading}
     />,
   );
 };
