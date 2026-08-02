@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>感想文クエスト</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <!-- ============================ ヘッダー ============================ -->
+    <header class="site-header">
+      <a class="back" href="/">← ゲーム一覧</a>
+      <span class="brand">📝 感想文クエスト</span>
+      <button id="btn-reset" class="ghost small" hidden>最初から</button>
+    </header>
+
+    <main id="app">
+      <!-- ========================== ①スタート ========================== -->
+      <section id="screen-start" class="screen">
+        <div class="hero">
+          <div class="hero-emoji">📝</div>
+          <h1>感想文クエスト</h1>
+          <p class="hero-sub">10の質問に答えるだけ。<br />読書感想文が、あなたの言葉で組み上がる。</p>
+          <button id="btn-start" class="primary big">クエストをはじめる</button>
+          <button id="btn-continue" class="ghost" hidden>つづきから</button>
+        </div>
+
+        <div class="card">
+          <h2>あそびかた</h2>
+          <ol class="howto">
+            <li><b>本の情報</b>を入れる</li>
+            <li>AIナビの<b>質問に1問ずつ</b>答える（答えると能力値が上がる）</li>
+            <li>集まった答えが<b>感想文の形に組み上がる</b></li>
+            <li><b>仕上げステージ</b>で、自分の言葉に書きかえる</li>
+            <li>読む人と字数を選んで<b>完成</b>！</li>
+          </ol>
+          <div class="stat-legend" id="start-stats"></div>
+          <p class="note">
+            ※ここでのAIは、あなたの答えの言葉づかいを読んで反応する仕組みです。感想文の中身は
+            <b>すべてあなたが書いた言葉</b>でできています。文章を代わりに作文する機能はありません。
+          </p>
+        </div>
+
+        <div class="card" id="library-card" hidden>
+          <h2>これまでの感想文</h2>
+          <div id="library-list"></div>
+        </div>
+      </section>
+
+      <!-- ========================= ②本の基本情報 ======================== -->
+      <section id="screen-book" class="screen" hidden>
+        <div class="card">
+          <h2>📖 まずは、本のことを教えて</h2>
+          <label class="field">
+            <span>本のタイトル <b class="req">必須</b></span>
+            <input id="in-title" type="text" placeholder="例：君たちはどう生きるか" maxlength="60" />
+          </label>
+          <label class="field">
+            <span>著者名</span>
+            <input id="in-author" type="text" placeholder="例：吉野源三郎" maxlength="40" />
+          </label>
+          <div class="field-row">
+            <label class="field">
+              <span>読み終えた日</span>
+              <input id="in-date" type="date" />
+            </label>
+            <label class="field">
+              <span>書く人の名前</span>
+              <input id="in-reader" type="text" placeholder="例：3年2組 なかむら" maxlength="30" />
+            </label>
+          </div>
+          <div id="book-error" class="error"></div>
+          <button id="btn-book-next" class="primary big">クエスト開始</button>
+        </div>
+      </section>
+
+      <!-- =========================== ③クエスト ========================== -->
+      <section id="screen-quest" class="screen" hidden>
+        <div class="hud">
+          <div class="hud-top">
+            <span id="quest-step" class="step-badge">Q1</span>
+            <div class="bar"><div id="quest-bar" class="bar-fill"></div></div>
+            <span id="quest-count" class="count">0 / 10</span>
+          </div>
+          <div id="quest-stats" class="stat-row"></div>
+        </div>
+
+        <div class="navi" id="navi">
+          <div class="navi-face">🤖</div>
+          <div class="navi-bubble" id="navi-text">こんにちは。ぼくは感想文ナビ。いっしょに感想文をつくろう。</div>
+        </div>
+
+        <div class="card question-card" id="question-card">
+          <div class="q-head">
+            <span id="q-kind" class="q-kind">クエスト</span>
+            <h2 id="q-title">質問</h2>
+          </div>
+          <p id="q-text" class="q-text"></p>
+
+          <button id="btn-hint" class="ghost small">💡 ヒントを見る</button>
+          <ul id="q-hints" class="hints" hidden></ul>
+
+          <textarea id="q-input" rows="5" placeholder=""></textarea>
+          <div class="input-foot">
+            <span id="q-count" class="chars">0字</span>
+            <span id="q-guide" class="guide"></span>
+          </div>
+
+          <div class="q-actions">
+            <button id="btn-prev" class="ghost">← もどる</button>
+            <button id="btn-skip" class="ghost">スキップ</button>
+            <button id="btn-answer" class="primary">こたえる</button>
+          </div>
+        </div>
+
+        <div id="reward" class="reward" hidden></div>
+      </section>
+
+      <!-- ========================= ④組み立て演出 ======================== -->
+      <section id="screen-forge" class="screen" hidden>
+        <div class="card forge-card">
+          <h2 id="forge-title">🧩 あなたの言葉を組み立てています…</h2>
+          <ul id="forge-log" class="forge-log"></ul>
+          <div id="forge-title-pick" hidden>
+            <h3>タイトルを決めよう</h3>
+            <p class="note">ピンとくるものを選ぶか、自分で書いてもOK。</p>
+            <div id="title-options" class="title-options"></div>
+            <input id="in-essay-title" type="text" placeholder="自分でタイトルを書く" maxlength="60" />
+            <button id="btn-to-edit" class="primary big">仕上げステージへ</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======================== ⑤仕上げステージ ======================= -->
+      <section id="screen-edit" class="screen" hidden>
+        <div class="card settings-card">
+          <h2>⚙️ だれに向けて、どのくらい？</h2>
+          <div class="opt-group" id="audience-options"></div>
+          <div class="opt-group" id="length-options"></div>
+          <div class="meters">
+            <div class="meter">
+              <div class="meter-head"><span>字数</span><b id="meter-chars">0字</b></div>
+              <div class="bar"><div id="meter-chars-bar" class="bar-fill"></div></div>
+              <small id="meter-chars-note"></small>
+            </div>
+            <div class="meter">
+              <div class="meter-head"><span>自分の言葉度</span><b id="meter-own">0%</b></div>
+              <div class="bar"><div id="meter-own-bar" class="bar-fill own"></div></div>
+              <small>AIが用意したつなぎの文を、自分の言葉に書きかえるほど上がります</small>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>✍️ 仕上げの3ミッション</h2>
+          <ul class="missions" id="missions"></ul>
+          <p class="note">
+            文をタップすると書きかえられます。<span class="tag frame">つなぎ</span>はAIが用意した文、
+            <span class="tag mine">あなた</span>はあなたが書いた文です。
+          </p>
+        </div>
+
+        <div class="card essay-card">
+          <h2 id="edit-essay-title" class="essay-title"></h2>
+          <div id="essay-body" class="essay"></div>
+        </div>
+
+        <div class="card" id="dropped-card" hidden>
+          <h3>今回は使わなかった材料</h3>
+          <div id="dropped-list"></div>
+        </div>
+
+        <div class="card">
+          <h3>➕ 一番伝えたいことを足す</h3>
+          <select id="add-block"></select>
+          <textarea id="add-text" rows="3" placeholder="どうしても書いておきたい一文を、自分の言葉で。"></textarea>
+          <button id="btn-add-sentence" class="ghost">この段落に足す</button>
+        </div>
+
+        <button id="btn-finish" class="primary big">感想文を完成させる</button>
+      </section>
+
+      <!-- ============================ ⑥完成 ============================= -->
+      <section id="screen-final" class="screen" hidden>
+        <div class="card result-head">
+          <div class="result-emoji">🎉</div>
+          <h2>感想文が完成しました！</h2>
+          <div id="final-summary" class="final-summary"></div>
+        </div>
+
+        <div class="card">
+          <div id="final-stats" class="stat-row big-stats"></div>
+          <div id="final-titles" class="titles"></div>
+        </div>
+
+        <div class="card essay-card print-area">
+          <h2 id="final-title" class="essay-title"></h2>
+          <div id="final-body" class="essay final"></div>
+          <p id="final-credit" class="credit"></p>
+        </div>
+
+        <div class="card">
+          <div class="final-actions">
+            <button id="btn-copy" class="primary">📋 全文をコピー</button>
+            <button id="btn-download" class="ghost">⬇️ テキストで保存</button>
+            <button id="btn-print" class="ghost">🖨 印刷する</button>
+          </div>
+          <div class="final-actions">
+            <button id="btn-back-edit" class="ghost">← 仕上げにもどる</button>
+            <button id="btn-again" class="ghost">別の本でもう一度</button>
+          </div>
+          <p id="copy-msg" class="note"></p>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <a href="/">だいだいゲームズ</a>
+    </footer>
+
+    <script src="data.js"></script>
+    <script src="engine.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
