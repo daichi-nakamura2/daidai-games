@@ -1,0 +1,1091 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>コツコツ登山</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext y='26' font-size='26'%3E%E2%9B%B0%EF%B8%8F%3C/text%3E%3C/svg%3E">
+<style>
+  :root {
+    /* ground & ink — 若葉に寄せたニュートラル */
+    --paper: #E7F1E8;
+    --paper-2: #D8E8DB;
+    --surface: #FFFFFF;
+    --surface-soft: #F1F8F2;
+    --ink: #17281F;
+    --ink-soft: #52665A;
+    --ink-faint: #87A091;
+    --line: #C9DDCF;
+    --line-strong: #A9C6B3;
+
+    --accent: #189C61;
+    --accent-deep: #107145;
+    --accent-soft: #D9F2E4;
+    --stamp: #D6453A;
+    --stamp-soft: #FBE2DF;
+    --sun: #F5AC2E;
+    --sun-deep: #C57D10;
+    --moon: #E6ECFA;
+    --snow: #F6FBFF;
+    --trail: rgba(255,255,255,0.62);
+
+    --ridge-far: #93B4C1;
+    --ridge-mid: #557C8C;
+    --ridge-near: #22333D;
+
+    /* 空は登るほど明けていく */
+    --sky0a:#2B3358; --sky0b:#6B5A7E;
+    --sky1a:#3B4472; --sky1b:#C77E7A;
+    --sky2a:#4A6FA0; --sky2b:#F0A164;
+    --sky3a:#4E93C9; --sky3b:#F6D9A0;
+    --sky4a:#3C8FD6; --sky4b:#B9E1F5;
+    --sky5a:#1C7CCF; --sky5b:#DCF1FB;
+
+    --pop: 0 3px 0 var(--line-strong);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #101A15;
+      --paper-2: #16231C;
+      --surface: #1A2620;
+      --surface-soft: #203029;
+      --ink: #E6F2E9;
+      --ink-soft: #A0B7A8;
+      --ink-faint: #6B8478;
+      --line: #2C3E35;
+      --line-strong: #3D5347;
+
+      --accent: #3FBE82;
+      --accent-deep: #1C7A51;
+      --accent-soft: #163024;
+      --stamp: #F0685A;
+      --stamp-soft: #37201D;
+      --sun: #F7BC55;
+      --sun-deep: #B07914;
+      --moon: #D3DCEF;
+      --snow: #CFE2EC;
+      --trail: rgba(255,255,255,0.34);
+
+      --ridge-far: #4A616B;
+      --ridge-mid: #2F444E;
+      --ridge-near: #0D181D;
+
+      --sky0a:#1B2140; --sky0b:#45385A;
+      --sky1a:#232A52; --sky1b:#8A5257;
+      --sky2a:#2C4569; --sky2b:#A96B3E;
+      --sky3a:#2F5B7E; --sky3b:#A08351;
+      --sky4a:#26597F; --sky4b:#6899AE;
+      --sky5a:#1A5286; --sky5b:#86BBD4;
+
+      --pop: 0 3px 0 var(--line-strong);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --paper: #101A15;
+    --paper-2: #16231C;
+    --surface: #1A2620;
+    --surface-soft: #203029;
+    --ink: #E6F2E9;
+    --ink-soft: #A0B7A8;
+    --ink-faint: #6B8478;
+    --line: #2C3E35;
+    --line-strong: #3D5347;
+
+    --accent: #3FBE82;
+    --accent-deep: #1C7A51;
+    --accent-soft: #163024;
+    --stamp: #F0685A;
+    --stamp-soft: #37201D;
+    --sun: #F7BC55;
+    --sun-deep: #B07914;
+    --moon: #D3DCEF;
+    --snow: #CFE2EC;
+    --trail: rgba(255,255,255,0.34);
+
+    --ridge-far: #4A616B;
+    --ridge-mid: #2F444E;
+    --ridge-near: #0D181D;
+
+    --sky0a:#1B2140; --sky0b:#45385A;
+    --sky1a:#232A52; --sky1b:#8A5257;
+    --sky2a:#2C4569; --sky2b:#A96B3E;
+    --sky3a:#2F5B7E; --sky3b:#A08351;
+    --sky4a:#26597F; --sky4b:#6899AE;
+    --sky5a:#1A5286; --sky5b:#86BBD4;
+
+    --pop: 0 3px 0 var(--line-strong);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    background-image:
+      radial-gradient(circle at 12% 8%, var(--paper-2) 0, transparent 42%),
+      radial-gradient(circle at 92% 72%, var(--paper-2) 0, transparent 46%);
+    color: var(--ink);
+    font-family: "Zen Maru Gothic", "Hiragino Maru Gothic ProN", "Hiragino Sans", sans-serif;
+    font-weight: 500;
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.65;
+  }
+
+  .wrap { max-width: 560px; margin: 0 auto; padding: 30px 18px 72px; display: flex; flex-direction: column; gap: 22px; }
+
+  /* ---------- header ---------- */
+  header.page { display: flex; align-items: center; gap: 12px; }
+
+  .mark { flex: none; width: 52px; height: 52px; }
+
+  .titles { display: flex; flex-direction: column; }
+
+  h1 {
+    font-family: "RocknRoll One", "Zen Maru Gothic", sans-serif;
+    font-weight: 400;
+    font-size: clamp(1.85rem, 7.4vw, 2.35rem);
+    line-height: 1.15;
+    margin: 0;
+    letter-spacing: 0.02em;
+    text-wrap: balance;
+  }
+  .tagline { color: var(--ink-soft); font-size: 0.86rem; margin: 2px 0 0; }
+
+  /* ---------- hero ---------- */
+  .hero-card {
+    position: relative;
+    background: var(--surface);
+    border: 2px solid var(--line-strong);
+    border-radius: 22px;
+    overflow: hidden;
+    box-shadow: 0 5px 0 var(--line-strong);
+  }
+
+  .scene { display: block; width: 100%; height: auto; }
+
+  .avatar-group { animation: hop 0.6s cubic-bezier(.34,1.7,.5,1); transform-box: fill-box; transform-origin: center bottom; }
+  @keyframes hop {
+    0%   { transform: translate(-16px, 10px) scale(0.55); opacity: 0; }
+    55%  { transform: translate(0, -9px) scale(1.18); opacity: 1; }
+    78%  { transform: translate(0, 2px) scale(0.94); }
+    100% { transform: translate(0, 0) scale(1); }
+  }
+
+  .march { animation: march 1.8s linear infinite; }
+  @keyframes march { to { stroke-dashoffset: -18; } }
+
+  .twinkle { animation: twinkle 3.4s ease-in-out infinite; }
+  @keyframes twinkle { 0%,100% { opacity: inherit; } 50% { opacity: 0.15; } }
+
+  .cloud { animation: sway 16s ease-in-out infinite; }
+  .cloud.b { animation-duration: 23s; animation-direction: reverse; }
+  @keyframes sway { 0%,100% { transform: translateX(-9px); } 50% { transform: translateX(11px); } }
+
+  .banner { animation: flap 2.4s ease-in-out infinite; transform-box: fill-box; transform-origin: left center; }
+  @keyframes flap { 0%,100% { transform: skewY(0deg) scaleX(1); } 50% { transform: skewY(-7deg) scaleX(0.88); } }
+
+  .hero-info { padding: 15px 16px 17px; display: flex; flex-direction: column; gap: 12px; }
+
+  .mountain-row { display: flex; align-items: center; gap: 8px; }
+  .mountain-tag {
+    font-size: 0.64rem;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 999px;
+    padding: 3px 9px;
+    font-weight: 700;
+    flex: none;
+  }
+  .mountain-name { font-family: "RocknRoll One", sans-serif; font-size: 1.02rem; }
+  .mountain-alt { font-size: 0.72rem; color: var(--ink-faint); font-variant-numeric: tabular-nums; margin-left: auto; }
+
+  .stage-row { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+  .stage-title { font-family: "RocknRoll One", sans-serif; font-size: 1.5rem; line-height: 1.1; }
+  .stage-xp { font-size: 0.8rem; color: var(--ink-soft); white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+  .bar { height: 13px; border-radius: 8px; background: var(--surface-soft); border: 2px solid var(--line-strong); overflow: hidden; padding: 0; }
+  .bar-fill {
+    height: 100%;
+    background: repeating-linear-gradient(115deg, var(--sun) 0 9px, var(--sun-deep) 9px 18px);
+    border-radius: 6px 3px 3px 6px;
+    transition: width 0.55s cubic-bezier(.3,1.3,.5,1);
+  }
+
+  /* ---------- stamp rally ---------- */
+  .stamps { display: grid; grid-template-columns: repeat(6, 1fr); gap: 7px; }
+  .stamp {
+    aspect-ratio: 1;
+    width: 100%;
+    max-width: 46px;
+    justify-self: center;
+    border-radius: 50%;
+    border: 2px dashed var(--line-strong);
+    color: var(--ink-faint);
+    display: grid;
+    place-items: center;
+    font-size: 0.7rem;
+    font-weight: 700;
+    background: var(--surface-soft);
+  }
+  .stamp.done {
+    border: 2.5px solid var(--stamp);
+    border-style: solid;
+    color: var(--stamp);
+    background: var(--stamp-soft);
+    transform: rotate(-8deg);
+    box-shadow: inset 0 0 0 1.5px var(--surface);
+  }
+  .stamp.done.fresh { animation: stampDown 0.5s cubic-bezier(.2,1.7,.4,1); }
+  @keyframes stampDown {
+    0%   { transform: rotate(14deg) scale(2.1); opacity: 0; }
+    60%  { transform: rotate(-11deg) scale(0.9); opacity: 1; }
+    100% { transform: rotate(-8deg) scale(1); }
+  }
+
+  /* ---------- chips ---------- */
+  .stat-chips { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .chip { background: var(--surface-soft); border: 2px solid var(--line); border-radius: 13px; padding: 7px 6px; text-align: center; }
+  .chip-num { display: block; font-family: "RocknRoll One", sans-serif; font-size: 1.18rem; color: var(--accent); font-variant-numeric: tabular-nums; line-height: 1.2; }
+  .chip-label { font-size: 0.64rem; color: var(--ink-soft); }
+
+  /* ---------- floating xp ---------- */
+  .xp-pop {
+    position: absolute;
+    left: 50%;
+    top: 46%;
+    transform: translateX(-50%);
+    font-family: "RocknRoll One", sans-serif;
+    font-size: 1.5rem;
+    color: var(--sun);
+    text-shadow: 0 2px 0 rgba(0,0,0,0.35);
+    pointer-events: none;
+    animation: xpRise 1.15s ease-out forwards;
+    z-index: 4;
+  }
+  @keyframes xpRise {
+    0%   { opacity: 0; transform: translate(-50%, 10px) scale(0.7); }
+    22%  { opacity: 1; transform: translate(-50%, -6px) scale(1.15); }
+    100% { opacity: 0; transform: translate(-50%, -54px) scale(1); }
+  }
+
+  /* ---------- toast ---------- */
+  #toast-layer { position: fixed; top: 14px; left: 50%; transform: translateX(-50%); z-index: 30; display: flex; flex-direction: column; align-items: center; gap: 8px; pointer-events: none; }
+  .toast {
+    background: var(--ink);
+    color: var(--paper);
+    font-size: 0.84rem;
+    font-weight: 700;
+    padding: 9px 16px;
+    border-radius: 999px;
+    box-shadow: 0 4px 0 rgba(0,0,0,0.22);
+    animation: toastPop 2.6s ease forwards;
+    white-space: nowrap;
+  }
+  .toast.summit { background: var(--sun); color: #2A1B00; font-family: "RocknRoll One", sans-serif; font-size: 0.94rem; animation-duration: 4.2s; box-shadow: 0 4px 0 var(--sun-deep); }
+  @keyframes toastPop {
+    0%   { opacity: 0; transform: translateY(-10px) scale(0.8); }
+    10%  { opacity: 1; transform: translateY(0) scale(1.06); }
+    16%  { transform: scale(1); }
+    84%  { opacity: 1; transform: translateY(0) scale(1); }
+    100% { opacity: 0; transform: translateY(-8px) scale(0.96); }
+  }
+
+  #confetti { position: fixed; inset: 0; pointer-events: none; z-index: 25; overflow: hidden; }
+  .flake { position: absolute; top: -14px; width: 9px; height: 14px; border-radius: 2px; animation: fall linear forwards; }
+  @keyframes fall {
+    0%   { opacity: 1; transform: translateY(0) rotate(0deg); }
+    100% { opacity: 0.9; transform: translateY(104vh) rotate(620deg); }
+  }
+
+  /* ---------- add task ---------- */
+  .add-task form { background: var(--surface); border: 2px solid var(--line-strong); border-radius: 18px; padding: 14px; box-shadow: 0 4px 0 var(--line-strong); display: flex; flex-direction: column; gap: 11px; }
+
+  #task-input {
+    font: inherit;
+    font-size: 0.98rem;
+    padding: 11px 13px;
+    border-radius: 12px;
+    border: 2px solid var(--line);
+    background: var(--surface-soft);
+    color: var(--ink);
+  }
+  #task-input::placeholder { color: var(--ink-faint); }
+  #task-input:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
+
+  .size-picker { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .size-btn {
+    font: inherit;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 3px;
+    padding: 9px 4px 8px;
+    border-radius: 12px;
+    border: 2px solid var(--line);
+    background: var(--surface-soft);
+    color: var(--ink-faint);
+    cursor: pointer;
+    font-weight: 700;
+    transition: transform .14s cubic-bezier(.34,1.6,.5,1), background .14s, border-color .14s, color .14s;
+  }
+  .size-btn small { font-size: 0.62rem; font-weight: 500; letter-spacing: 0.01em; }
+  .size-btn:hover { transform: translateY(-2px); border-color: var(--line-strong); }
+  .size-btn.active { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); transform: translateY(-2px); }
+  .size-btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+  .add-btn {
+    font-family: "RocknRoll One", sans-serif;
+    font-size: 1.02rem;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 13px;
+    padding: 12px;
+    cursor: pointer;
+    box-shadow: 0 4px 0 var(--accent-deep);
+    transition: transform .1s, box-shadow .1s, filter .14s;
+  }
+  .add-btn:hover { filter: brightness(1.06); }
+  .add-btn:active { transform: translateY(4px); box-shadow: 0 0 0 var(--accent-deep); }
+  .add-btn:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
+
+  /* ---------- task list ---------- */
+  .tasks { display: flex; flex-direction: column; gap: 8px; }
+  .task-group-label { font-size: 0.72rem; color: var(--ink-faint); letter-spacing: 0.1em; margin: 4px 0 0 4px; font-weight: 700; }
+
+  .task-row {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    background: var(--surface);
+    border: 2px solid var(--line);
+    border-radius: 14px;
+    padding: 10px 10px 10px 12px;
+    box-shadow: var(--pop);
+  }
+
+  .check {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 26px; height: 26px;
+    flex: none;
+    margin: 0;
+    border: 2.5px solid var(--line-strong);
+    border-radius: 50%;
+    background: var(--surface);
+    cursor: pointer;
+    transition: transform .16s cubic-bezier(.34,1.7,.5,1), background .14s, border-color .14s;
+  }
+  .check:hover { border-color: var(--accent); transform: scale(1.12); }
+  .check:checked {
+    border-color: var(--accent);
+    transform: scale(1.2);
+    background: var(--accent) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.4 8.6l3.3 3.3L12.7 5' fill='none' stroke='white' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 15px no-repeat;
+  }
+  .check:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+  .t-main { flex: 1; min-width: 0; display: flex; flex-direction: column; cursor: pointer; }
+  .t-text { font-size: 0.94rem; overflow-wrap: anywhere; }
+  .t-meta { font-size: 0.7rem; color: var(--ink-faint); font-variant-numeric: tabular-nums; }
+
+  .t-del { font: inherit; font-size: 0.8rem; background: none; border: none; color: var(--ink-faint); cursor: pointer; padding: 5px 7px; border-radius: 8px; flex: none; }
+  .t-del:hover { color: var(--stamp); background: var(--stamp-soft); }
+  .t-del:focus-visible { outline: 2px solid var(--stamp); outline-offset: 1px; }
+
+  .empty-note {
+    font-size: 0.88rem;
+    color: var(--ink-soft);
+    background: var(--surface-soft);
+    border: 2px dashed var(--line-strong);
+    border-radius: 16px;
+    padding: 20px 16px;
+    text-align: center;
+    margin: 0;
+  }
+
+  .done-row { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; font-size: 0.82rem; color: var(--ink-faint); padding: 3px 4px; }
+  .done-row .t-text { text-decoration: line-through; text-decoration-thickness: 1.5px; }
+  .done-row .done-xp { color: var(--sun-deep); font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+  /* ---------- share ---------- */
+  .share { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; }
+  .share-btn {
+    font-family: "RocknRoll One", sans-serif;
+    font-size: 0.94rem;
+    background: var(--surface);
+    color: var(--ink);
+    border: 2px solid var(--line-strong);
+    border-radius: 14px;
+    padding: 12px 22px;
+    cursor: pointer;
+    box-shadow: 0 4px 0 var(--line-strong);
+    transition: transform .1s, box-shadow .1s, color .14s, border-color .14s;
+  }
+  .share-btn:hover:not(:disabled) { color: var(--accent); border-color: var(--accent); }
+  .share-btn:active:not(:disabled) { transform: translateY(4px); box-shadow: 0 0 0 var(--line-strong); }
+  .share-btn:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; }
+  .share-btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .share-note { font-size: 0.76rem; color: var(--ink-faint); min-height: 1em; margin: 0; }
+
+  .portal-back {
+    align-self: flex-start;
+    font-size: 0.82rem;
+    color: var(--ink-soft);
+    text-decoration: none;
+    padding: 4px 2px;
+    border-radius: 6px;
+  }
+  .portal-back:hover { color: var(--accent); }
+  .portal-back:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .portal-link { color: var(--ink-soft); }
+  .portal-link:hover { color: var(--accent); }
+
+  footer.notes { padding-top: 14px; border-top: 2px dotted var(--line-strong); font-size: 0.76rem; color: var(--ink-faint); text-align: center; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
+    .stamp.done { transform: rotate(-8deg); }
+  }
+</style>
+
+</head>
+<body>
+
+<div id="toast-layer" aria-live="polite"></div>
+<div id="confetti" aria-hidden="true"></div>
+
+<div class="wrap">
+  <a class="portal-back" href="/">← ゲーム一覧</a>
+
+  <header class="page">
+    <svg class="mark" viewBox="0 0 52 52" role="img" aria-label="コツコツ登山のマーク">
+      <circle cx="26" cy="26" r="24" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="2.5"/>
+      <path d="M9 36 L21 18 L28 28 L33 21 L43 36 Z" fill="var(--accent)"/>
+      <path d="M33 21 L37.5 27.7 L35 26.5 L33 29 L30.6 25.5 Z" fill="var(--snow)"/>
+      <circle cx="35" cy="14" r="4" fill="var(--sun)"/>
+    </svg>
+    <div class="titles">
+      <h1>コツコツ登山</h1>
+      <p class="tagline">小さなタスクを、一歩ぶんの標高に。</p>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="hero-card" id="hero-card">
+      <div id="hero-scene"></div>
+      <div class="hero-info" id="hero-info"></div>
+    </div>
+  </section>
+
+  <section class="add-task">
+    <form id="add-form">
+      <input id="task-input" type="text" placeholder="きょう登る一歩を書く…" maxlength="60" autocomplete="off">
+      <div class="size-picker" role="radiogroup" aria-label="タスクの大きさ">
+        <button type="button" class="size-btn" data-size="small" aria-pressed="false">
+          <svg viewBox="0 0 26 20" width="15" height="12" aria-hidden="true"><polygon points="13,4 24,17 2,17" fill="currentColor"/></svg>
+          小<small>10XP・5分</small>
+        </button>
+        <button type="button" class="size-btn active" data-size="medium" aria-pressed="true">
+          <svg viewBox="0 0 26 20" width="20" height="16" aria-hidden="true"><polygon points="13,2 24,18 2,18" fill="currentColor"/></svg>
+          中<small>25XP・30分</small>
+        </button>
+        <button type="button" class="size-btn" data-size="large" aria-pressed="false">
+          <svg viewBox="0 0 26 20" width="26" height="20" aria-hidden="true"><polygon points="13,1 25,19 1,19" fill="currentColor"/></svg>
+          大<small>50XP・2時間〜</small>
+        </button>
+      </div>
+      <button type="submit" class="add-btn">ザックに入れる</button>
+    </form>
+  </section>
+
+  <section class="tasks" id="tasks"></section>
+
+  <section class="share">
+    <button type="button" id="share-btn" class="share-btn">記念カードを保存</button>
+    <p class="share-note" id="share-note"></p>
+  </section>
+
+  <footer class="notes">
+    <a class="portal-link" href="/">だいだいゲームズ</a><br><br>
+    記録はこのブラウザだけに保存されます。他の端末や他の人とは共有されません。<br>
+    タブを閉じても消えないので、思い立ったときにタスクを足していってください。
+  </footer>
+</div>
+
+<canvas id="share-canvas" width="1080" height="1080" style="display:none" aria-hidden="true"></canvas>
+
+<script>
+(function () {
+  "use strict";
+
+  var STORAGE_KEY = "kotsukotsu-tozan-v1";
+  var MOUNTAIN_MAX = 300;
+  var SIZES = {
+    small:  { label: "小", xp: 10 },
+    medium: { label: "中", xp: 25 },
+    large:  { label: "大", xp: 50 }
+  };
+  var STAGE_TITLES = ["麓", "三合目", "五合目", "八合目", "山頂目前", "山頂制覇"];
+  var STAMP_LABELS = ["麓", "三", "五", "八", "九", "頂"];
+
+  // 登頂するたびに、ひとつ高い山へ。
+  var MOUNTAINS = [
+    { name: "高尾山", alt: 599 },
+    { name: "筑波山", alt: 877 },
+    { name: "金剛山", alt: 1125 },
+    { name: "大山", alt: 1729 },
+    { name: "蔵王山", alt: 1841 },
+    { name: "八ヶ岳", alt: 2899 },
+    { name: "木曽駒ヶ岳", alt: 2956 },
+    { name: "御嶽山", alt: 3067 },
+    { name: "槍ヶ岳", alt: 3180 },
+    { name: "奥穂高岳", alt: 3190 },
+    { name: "北岳", alt: 3193 },
+    { name: "富士山", alt: 3776 }
+  ];
+
+  // 稜線の内側を縫うように登る道
+  var WPTS = [
+    { x: 52,  y: 232 },
+    { x: 108, y: 240 },
+    { x: 160, y: 226 },
+    { x: 205, y: 192 },
+    { x: 258, y: 128 },
+    { x: 308, y: 60 }
+  ];
+
+  var STARS = [
+    [42, 40, 1.5, 1], [78, 72, 1.1, 0.8], [126, 34, 1.7, 1], [163, 66, 1.0, 0.7],
+    [198, 28, 1.3, 0.9], [232, 60, 1.5, 1], [268, 36, 1.1, 0.8], [306, 74, 1.3, 0.9],
+    [344, 30, 1.6, 1], [372, 66, 1.1, 0.7], [16, 78, 1.2, 0.8], [96, 18, 1.2, 0.9]
+  ];
+
+  var reduceMotion = false;
+  try { reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) {}
+
+  function todayStr() {
+    var d = new Date();
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  }
+
+  function dayDiff(a, b) {
+    var da = new Date(a + "T00:00:00");
+    var db = new Date(b + "T00:00:00");
+    return Math.round((db - da) / 86400000);
+  }
+
+  function defaultState() {
+    return { tasks: [], totalXp: 0, mountainXp: 0, summitCount: 0, lastActiveDate: null, streak: 0, bestStreak: 0, completedLog: [] };
+  }
+
+  var STATE = loadState();
+  var prevStage = null;
+
+  function loadState() {
+    try {
+      var raw = window.localStorage.getItem(STORAGE_KEY);
+      if (!raw) return defaultState();
+      var parsed = JSON.parse(raw);
+      var s = defaultState();
+      for (var k in s) { if (parsed && parsed[k] !== undefined) s[k] = parsed[k]; }
+      if (!Array.isArray(s.tasks)) s.tasks = [];
+      if (!Array.isArray(s.completedLog)) s.completedLog = [];
+      return s;
+    } catch (e) { return defaultState(); }
+  }
+
+  function saveState() {
+    try { window.localStorage.setItem(STORAGE_KEY, JSON.stringify(STATE)); } catch (e) { /* storage unavailable: continue session-only */ }
+  }
+
+  function escapeHtml(str) {
+    return String(str).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  function effectiveStreak() {
+    if (!STATE.lastActiveDate) return 0;
+    var diff = dayDiff(STATE.lastActiveDate, todayStr());
+    if (diff <= 1) return STATE.streak;
+    return 0;
+  }
+
+  function currentMountain() { return MOUNTAINS[STATE.summitCount % MOUNTAINS.length]; }
+  function nextMountain() { return MOUNTAINS[(STATE.summitCount) % MOUNTAINS.length]; }
+  function stageIndex() { return Math.min(5, Math.floor(STATE.mountainXp / (MOUNTAIN_MAX / 6))); }
+
+  function posAt(progress) {
+    var segF = Math.max(0, Math.min(1, progress)) * (WPTS.length - 1);
+    var i = Math.min(WPTS.length - 2, Math.floor(segF));
+    var t = segF - i;
+    var a = WPTS[i], b = WPTS[i + 1];
+    return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t };
+  }
+
+  function gearFor(stageIdx) {
+    var g = "";
+    if (stageIdx >= 1) g += '<rect x="-13" y="-6" width="7" height="11" rx="2.5" fill="var(--stamp)"/>';          // ザック
+    if (stageIdx >= 2) g += '<line x1="9" y1="-3" x2="12" y2="10" stroke="var(--snow)" stroke-width="1.8" stroke-linecap="round"/>'; // ストック
+    if (stageIdx >= 3) g += '<path d="M -8 -8 Q 0 -15 8 -8 Z" fill="var(--sun)"/><line x1="-9.5" y1="-7.6" x2="9.5" y2="-7.6" stroke="var(--sun)" stroke-width="2" stroke-linecap="round"/>'; // 帽子
+    if (stageIdx >= 4) g += '<line x1="12" y1="-4" x2="12" y2="-17" stroke="var(--snow)" stroke-width="1.7" stroke-linecap="round"/><polygon points="12,-17 22,-14 12,-11" fill="var(--sun)"/>'; // 手旗
+    return g;
+  }
+
+  function renderSceneSVG(stageIdx, pct) {
+    var pos = posAt(pct);
+    var sunX = 62 + pct * 185;
+    var sunY = 132 - pct * 90;
+    var night = Math.max(0, Math.min(1, (0.5 - pct) / 0.5));
+
+    var stars = "";
+    if (night > 0.03) {
+      for (var s = 0; s < STARS.length; s++) {
+        var st = STARS[s];
+        stars += '<circle class="twinkle" cx="' + st[0] + '" cy="' + st[1] + '" r="' + st[2] + '" fill="var(--snow)" opacity="' + (night * st[3]).toFixed(2) + '" style="animation-delay:' + (s * 0.37).toFixed(2) + 's"/>';
+      }
+    }
+
+    var defs = '<linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0%" stop-color="var(--sky' + stageIdx + 'a)"/>' +
+      '<stop offset="100%" stop-color="var(--sky' + stageIdx + 'b)"/>' +
+      '</linearGradient>';
+
+    var celestial;
+    if (pct < 0.4) {
+      defs += '<mask id="lune">' +
+        '<circle cx="' + sunX.toFixed(1) + '" cy="' + sunY.toFixed(1) + '" r="15" fill="#fff"/>' +
+        '<circle cx="' + (sunX + 7).toFixed(1) + '" cy="' + (sunY - 5).toFixed(1) + '" r="13.5" fill="#000"/></mask>';
+      celestial = '<circle cx="' + sunX.toFixed(1) + '" cy="' + sunY.toFixed(1) + '" r="15" fill="var(--moon)" mask="url(#lune)"/>';
+    } else {
+      var rays = "";
+      for (var r = 0; r < 8; r++) {
+        var ang = (r * Math.PI) / 4 + 0.2;
+        rays += '<line x1="' + (sunX + Math.cos(ang) * 20).toFixed(1) + '" y1="' + (sunY + Math.sin(ang) * 20).toFixed(1) +
+          '" x2="' + (sunX + Math.cos(ang) * 26.5).toFixed(1) + '" y2="' + (sunY + Math.sin(ang) * 26.5).toFixed(1) +
+          '" stroke="var(--sun)" stroke-width="2.4" stroke-linecap="round" opacity="0.7"/>';
+      }
+      celestial = '<circle cx="' + sunX.toFixed(1) + '" cy="' + sunY.toFixed(1) + '" r="27" fill="var(--sun)" opacity="0.16"/>' + rays +
+        '<circle cx="' + sunX.toFixed(1) + '" cy="' + sunY.toFixed(1) + '" r="15" fill="var(--sun)"/>';
+    }
+
+    function cloud(cls, x, y, k) {
+      return '<g class="cloud ' + cls + '" opacity="0.55">' +
+        '<ellipse cx="' + x + '" cy="' + y + '" rx="' + (22 * k) + '" ry="' + (8 * k) + '" fill="var(--snow)"/>' +
+        '<ellipse cx="' + (x - 13 * k) + '" cy="' + (y + 3 * k) + '" rx="' + (14 * k) + '" ry="' + (6.5 * k) + '" fill="var(--snow)"/>' +
+        '<ellipse cx="' + (x + 15 * k) + '" cy="' + (y + 2 * k) + '" rx="' + (12 * k) + '" ry="' + (6 * k) + '" fill="var(--snow)"/>' +
+        "</g>";
+    }
+
+    var birds = "";
+    if (stageIdx >= 2) {
+      birds = '<g stroke="var(--ridge-near)" stroke-width="1.8" fill="none" stroke-linecap="round" opacity="0.7">' +
+        '<path d="M96 86 q6 -6 12 0"/><path d="M108 86 q6 -6 12 0"/>' +
+        '<path d="M138 100 q5 -5 10 0"/><path d="M148 100 q5 -5 10 0"/></g>';
+    }
+
+    var dots = "";
+    for (var i = 0; i < WPTS.length; i++) {
+      var reached = i <= stageIdx;
+      dots += '<circle cx="' + WPTS[i].x + '" cy="' + WPTS[i].y + '" r="' + (reached ? 5 : 3.6) + '" fill="' + (reached ? "var(--sun)" : "var(--trail)") + '" stroke="var(--ridge-near)" stroke-width="1.4"/>';
+    }
+
+    var trailPts = WPTS.map(function (p) { return p.x + "," + p.y; }).join(" ");
+    var lit = stageIdx >= 5;
+    var flag = '<line x1="312" y1="50" x2="312" y2="26" stroke="var(--snow)" stroke-width="2.2" stroke-linecap="round"/>' +
+      '<polygon class="' + (lit ? "banner" : "") + '" points="312,26 332,32 312,38" fill="' + (lit ? "var(--stamp)" : "var(--ridge-far)") + '"/>';
+
+    return (
+      '<svg class="scene" viewBox="0 0 400 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="' +
+        currentMountain().name + "を" + STAGE_TITLES[stageIdx] + 'まで登った様子">' +
+        "<defs>" + defs + "</defs>" +
+        '<rect x="0" y="0" width="400" height="260" fill="url(#skyGrad)"/>' +
+        stars + celestial +
+        cloud("a", 92, 60, 1) + cloud("b", 222, 104, 0.68) +
+        birds +
+        '<polygon points="0,190 55,150 120,175 200,128 288,168 400,138 400,260 0,260" fill="var(--ridge-far)" opacity="0.85"/>' +
+        '<polygon points="0,218 85,168 165,198 250,148 330,192 400,168 400,260 0,260" fill="var(--ridge-mid)" opacity="0.92"/>' +
+        '<polygon points="0,260 45,214 125,238 210,176 312,50 356,200 400,232 400,260" fill="var(--ridge-near)"/>' +
+        '<path d="M 312 50 L 321.4 82 L 316 73 L 310 83 L 304 72 L 297 81 L 286.1 82 Z" fill="var(--snow)" opacity="0.92"/>' +
+        flag +
+        '<polyline class="march" points="' + trailPts + '" fill="none" stroke="var(--trail)" stroke-width="2.4" stroke-dasharray="4 5" stroke-linecap="round"/>' +
+        dots +
+        '<g transform="translate(' + pos.x.toFixed(1) + "," + pos.y.toFixed(1) + ')"><g class="avatar-group">' +
+          gearFor(stageIdx) +
+          '<circle r="9.5" fill="var(--accent)" stroke="var(--snow)" stroke-width="1.6"/>' +
+          '<circle cx="-3.2" cy="-1.4" r="1.5" fill="var(--snow)"/>' +
+          '<circle cx="3.2" cy="-1.4" r="1.5" fill="var(--snow)"/>' +
+          '<path d="M -3 3 q 3 2.6 6 0" fill="none" stroke="var(--snow)" stroke-width="1.5" stroke-linecap="round"/>' +
+        "</g></g>" +
+      "</svg>"
+    );
+  }
+
+  function render(freshStamps) {
+    var stageIdx = stageIndex();
+    var pct = Math.min(1, STATE.mountainXp / MOUNTAIN_MAX);
+    var mt = currentMountain();
+
+    document.getElementById("hero-scene").innerHTML = renderSceneSVG(stageIdx, pct);
+
+    var stampsHtml = "";
+    for (var i = 0; i < 6; i++) {
+      var done = i <= stageIdx && (i > 0 || STATE.mountainXp > 0 || STATE.totalXp > 0);
+      var fresh = done && freshStamps && i > freshStamps.from && i <= freshStamps.to;
+      stampsHtml += '<div class="stamp' + (done ? " done" : "") + (fresh ? " fresh" : "") + '">' + STAMP_LABELS[i] + "</div>";
+    }
+
+    document.getElementById("hero-info").innerHTML =
+      '<div class="mountain-row">' +
+        '<span class="mountain-tag">いま登っている山</span>' +
+        '<span class="mountain-name">' + mt.name + "</span>" +
+        '<span class="mountain-alt">' + mt.alt + " m</span>" +
+      "</div>" +
+      '<div class="stage-row"><span class="stage-title">' + STAGE_TITLES[stageIdx] + '</span>' +
+        '<span class="stage-xp">' + STATE.mountainXp + " / " + MOUNTAIN_MAX + " XP</span></div>" +
+      '<div class="bar"><div class="bar-fill" style="width:' + Math.round(pct * 100) + '%"></div></div>' +
+      '<div class="stamps">' + stampsHtml + "</div>" +
+      '<div class="stat-chips">' +
+        '<div class="chip"><span class="chip-num">' + STATE.totalXp + '</span><span class="chip-label">総獲得XP</span></div>' +
+        '<div class="chip"><span class="chip-num">' + STATE.summitCount + '</span><span class="chip-label">登頂回数</span></div>' +
+        '<div class="chip"><span class="chip-num">' + effectiveStreak() + '</span><span class="chip-label">連続日数</span></div>' +
+      "</div>";
+
+    var tasksEl = document.getElementById("tasks");
+    var html = "";
+    if (STATE.tasks.length === 0) {
+      html += '<p class="empty-note">ザックはまだ空っぽ。<br>きょう登る一歩を、ひとつ入れてみよう。</p>';
+    } else {
+      html += '<p class="task-group-label">ザックの中</p>';
+      STATE.tasks.forEach(function (t) {
+        var sz = SIZES[t.size] || SIZES.medium;
+        html +=
+          '<div class="task-row">' +
+            '<input type="checkbox" class="check" id="chk-' + t.id + '" data-complete="' + t.id + '">' +
+            '<label for="chk-' + t.id + '" class="t-main"><span class="t-text">' + escapeHtml(t.text) + '</span>' +
+            '<span class="t-meta">' + sz.label + "・+" + sz.xp + "XP</span></label>" +
+            '<button type="button" class="t-del" data-delete="' + t.id + '" aria-label="削除">✕</button>' +
+          "</div>";
+      });
+    }
+
+    var today = todayStr();
+    var doneToday = STATE.completedLog.filter(function (l) { return l.date === today; });
+    if (doneToday.length) {
+      html += '<p class="task-group-label">きょう登った分</p>';
+      doneToday.slice().reverse().forEach(function (l) {
+        html += '<div class="done-row"><span class="t-text">' + escapeHtml(l.text) + '</span><span class="done-xp">+' + l.xp + "XP</span></div>";
+      });
+    }
+    tasksEl.innerHTML = html;
+    prevStage = stageIdx;
+  }
+
+  function showToast(text, opts) {
+    var layer = document.getElementById("toast-layer");
+    var el = document.createElement("div");
+    el.className = "toast" + (opts && opts.summit ? " summit" : "");
+    el.textContent = text;
+    layer.appendChild(el);
+    setTimeout(function () { el.remove(); }, opts && opts.summit ? 4200 : 2600);
+  }
+
+  function popXp(xp) {
+    var card = document.getElementById("hero-card");
+    var el = document.createElement("div");
+    el.className = "xp-pop";
+    el.textContent = "+" + xp + " XP";
+    card.appendChild(el);
+    setTimeout(function () { el.remove(); }, 1250);
+  }
+
+  function confetti() {
+    if (reduceMotion) return;
+    var layer = document.getElementById("confetti");
+    var colors = ["var(--sun)", "var(--accent)", "var(--stamp)", "var(--snow)"];
+    for (var i = 0; i < 34; i++) {
+      var f = document.createElement("div");
+      f.className = "flake";
+      f.style.left = (Math.random() * 100).toFixed(1) + "%";
+      f.style.background = colors[i % colors.length];
+      f.style.animationDuration = (1.5 + Math.random() * 1.4).toFixed(2) + "s";
+      f.style.animationDelay = (Math.random() * 0.5).toFixed(2) + "s";
+      f.style.width = (6 + Math.random() * 6).toFixed(1) + "px";
+      layer.appendChild(f);
+      (function (node) { setTimeout(function () { node.remove(); }, 3600); })(f);
+    }
+  }
+
+  function updateStreak() {
+    var today = todayStr();
+    if (STATE.lastActiveDate === today) { /* already counted today */ }
+    else if (STATE.lastActiveDate && dayDiff(STATE.lastActiveDate, today) === 1) {
+      STATE.streak += 1;
+    } else {
+      STATE.streak = 1;
+    }
+    STATE.lastActiveDate = today;
+    STATE.bestStreak = Math.max(STATE.bestStreak, STATE.streak);
+  }
+
+  function completeTask(id) {
+    var idx = STATE.tasks.findIndex(function (t) { return t.id === id; });
+    if (idx === -1) return;
+    var task = STATE.tasks[idx];
+    var sz = SIZES[task.size] || SIZES.medium;
+    var beforeStage = stageIndex();
+
+    STATE.tasks.splice(idx, 1);
+    STATE.totalXp += sz.xp;
+    STATE.mountainXp += sz.xp;
+
+    var summited = false;
+    while (STATE.mountainXp >= MOUNTAIN_MAX) {
+      STATE.mountainXp -= MOUNTAIN_MAX;
+      STATE.summitCount += 1;
+      summited = true;
+    }
+
+    STATE.completedLog.push({ text: task.text, xp: sz.xp, date: todayStr() });
+    if (STATE.completedLog.length > 200) STATE.completedLog = STATE.completedLog.slice(-200);
+
+    updateStreak();
+    saveState();
+
+    var afterStage = stageIndex();
+    render(summited ? null : { from: beforeStage, to: afterStage });
+    popXp(sz.xp);
+
+    if (summited) {
+      confetti();
+      showToast("登頂！ つぎは " + nextMountain().name + " へ。", { summit: true });
+    } else if (afterStage > beforeStage) {
+      showToast(STAGE_TITLES[afterStage] + " に到着！ +" + sz.xp + " XP");
+    } else {
+      showToast("+" + sz.xp + " XP");
+    }
+  }
+
+  function deleteTask(id) {
+    STATE.tasks = STATE.tasks.filter(function (t) { return t.id !== id; });
+    saveState();
+    render();
+  }
+
+  function addTask(text, sizeKey) {
+    var id = "t" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+    STATE.tasks.push({ id: id, text: text, size: sizeKey });
+    saveState();
+    render();
+  }
+
+  var selectedSize = "medium";
+  document.querySelectorAll(".size-btn").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      selectedSize = btn.getAttribute("data-size");
+      document.querySelectorAll(".size-btn").forEach(function (b) {
+        var on = b === btn;
+        b.classList.toggle("active", on);
+        b.setAttribute("aria-pressed", on ? "true" : "false");
+      });
+    });
+  });
+
+  document.getElementById("add-form").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var input = document.getElementById("task-input");
+    var text = input.value.trim();
+    if (!text) return;
+    addTask(text, selectedSize);
+    input.value = "";
+    input.focus();
+  });
+
+  document.getElementById("tasks").addEventListener("change", function (e) {
+    var t = e.target;
+    if (t && t.matches('input[type="checkbox"][data-complete]')) completeTask(t.getAttribute("data-complete"));
+  });
+
+  document.getElementById("tasks").addEventListener("click", function (e) {
+    var btn = e.target.closest("[data-delete]");
+    if (btn) deleteTask(btn.getAttribute("data-delete"));
+  });
+
+  /* ---------- 記念カード ---------- */
+
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+
+  function cssVar(name) {
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  }
+
+  function drawShareCard() {
+    var canvas = document.getElementById("share-canvas");
+    var ctx = canvas.getContext("2d");
+    var W = canvas.width, H = canvas.height;
+
+    var stageIdx = stageIndex();
+    var pct = Math.min(1, STATE.mountainXp / MOUNTAIN_MAX);
+    var mt = currentMountain();
+
+    var skyA = cssVar("--sky" + stageIdx + "a"), skyB = cssVar("--sky" + stageIdx + "b");
+    var ridgeFar = cssVar("--ridge-far"), ridgeMid = cssVar("--ridge-mid"), ridgeNear = cssVar("--ridge-near");
+    var paper = cssVar("--paper"), ink = cssVar("--ink"), inkSoft = cssVar("--ink-soft");
+    var gold = cssVar("--sun"), accent = cssVar("--accent"), snow = cssVar("--snow"), stamp = cssVar("--stamp");
+    var lineStrong = cssVar("--line-strong");
+
+    ctx.fillStyle = paper;
+    ctx.fillRect(0, 0, W, H);
+
+    var skyH = H * 0.54;
+    roundRect(ctx, 48, 48, W - 96, skyH, 30);
+    ctx.save();
+    ctx.clip();
+
+    var grad = ctx.createLinearGradient(0, 48, 0, 48 + skyH);
+    grad.addColorStop(0, skyA);
+    grad.addColorStop(1, skyB);
+    ctx.fillStyle = grad;
+    ctx.fillRect(48, 48, W - 96, skyH);
+
+    // 太陽 / 月
+    var cx = 200 + pct * 560, cy = 380 - pct * 230;
+    ctx.globalAlpha = 0.18;
+    ctx.fillStyle = gold;
+    ctx.beginPath(); ctx.arc(cx, cy, 96, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = pct < 0.4 ? cssVar("--moon") : gold;
+    ctx.beginPath(); ctx.arc(cx, cy, 52, 0, Math.PI * 2); ctx.fill();
+
+    function ridge(points, color, alpha) {
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.moveTo(points[0][0], points[0][1]);
+      for (var i = 1; i < points.length; i++) ctx.lineTo(points[i][0], points[i][1]);
+      ctx.closePath();
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+    var baseY = 48 + skyH;
+    ridge([[48, baseY - 120], [280, baseY - 220], [520, baseY - 150], [780, baseY - 240], [984, baseY - 170], [984, baseY], [48, baseY]], ridgeFar, 0.85);
+    ridge([[48, baseY - 60], [320, baseY - 190], [560, baseY - 90], [820, baseY - 210], [984, baseY - 120], [984, baseY], [48, baseY]], ridgeMid, 0.92);
+    ridge([[48, baseY], [220, baseY - 90], [420, baseY - 40], [660, baseY - 330], [830, baseY - 60], [984, baseY - 130], [984, baseY]], ridgeNear, 1);
+
+    // 雪をかぶった頂と旗
+    ctx.fillStyle = snow;
+    ctx.beginPath();
+    ctx.moveTo(660, baseY - 330);
+    ctx.lineTo(688, baseY - 250);
+    ctx.lineTo(674, baseY - 268);
+    ctx.lineTo(660, baseY - 244);
+    ctx.lineTo(644, baseY - 270);
+    ctx.lineTo(628, baseY - 246);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.strokeStyle = snow;
+    ctx.lineWidth = 7;
+    ctx.lineCap = "round";
+    ctx.beginPath(); ctx.moveTo(660, baseY - 330); ctx.lineTo(660, baseY - 396); ctx.stroke();
+    ctx.fillStyle = stageIdx >= 5 ? stamp : ridgeFar;
+    ctx.beginPath();
+    ctx.moveTo(660, baseY - 396); ctx.lineTo(716, baseY - 378); ctx.lineTo(660, baseY - 360);
+    ctx.closePath(); ctx.fill();
+    ctx.restore();
+
+    // テキスト
+    ctx.textBaseline = "alphabetic";
+    ctx.font = "500 30px 'Zen Maru Gothic', sans-serif";
+    ctx.fillStyle = inkSoft;
+    ctx.fillText("コツコツ登山 の記録", 66, skyH + 112);
+
+    ctx.fillStyle = ink;
+    ctx.font = "400 86px 'RocknRoll One', 'Zen Maru Gothic', sans-serif";
+    ctx.fillText(mt.name + "・" + STAGE_TITLES[stageIdx], 66, skyH + 196);
+
+    // XPバー
+    var barY = skyH + 232, barW = W - 132;
+    ctx.fillStyle = lineStrong;
+    roundRect(ctx, 66, barY, barW, 22, 11); ctx.fill();
+    ctx.fillStyle = gold;
+    roundRect(ctx, 66, barY, Math.max(22, barW * pct), 22, 11); ctx.fill();
+
+    ctx.font = "700 32px 'Zen Maru Gothic', sans-serif";
+    ctx.fillStyle = accent;
+    ctx.fillText(STATE.mountainXp + " / " + MOUNTAIN_MAX + " XP", 66, barY + 74);
+
+    ctx.fillStyle = inkSoft;
+    ctx.font = "500 31px 'Zen Maru Gothic', sans-serif";
+    ctx.fillText("総獲得XP　" + STATE.totalXp, 66, barY + 128);
+    ctx.fillText("登頂回数　" + STATE.summitCount + " 回", 66, barY + 174);
+    ctx.fillText("連続日数　" + effectiveStreak() + " 日", 66, barY + 220);
+
+    // スタンプ列
+    var sx = W - 96 - 46;
+    for (var i = 5; i >= 0; i--) {
+      var done = i <= stageIdx;
+      ctx.beginPath();
+      ctx.arc(sx, barY + 150, 34, 0, Math.PI * 2);
+      ctx.lineWidth = 5;
+      ctx.strokeStyle = done ? stamp : lineStrong;
+      ctx.setLineDash(done ? [] : [8, 8]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = done ? stamp : lineStrong;
+      ctx.font = "700 30px 'Zen Maru Gothic', sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText(STAMP_LABELS[i], sx, barY + 161);
+      ctx.textAlign = "left";
+      sx -= 80;
+    }
+  }
+
+  document.getElementById("share-btn").addEventListener("click", function () {
+    var note = document.getElementById("share-note");
+    var btn = document.getElementById("share-btn");
+    var ready = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
+    btn.disabled = true;
+    note.textContent = "記念カードを描いています…";
+    ready.then(function () {
+      drawShareCard();
+      document.getElementById("share-canvas").toBlob(function (blob) {
+        btn.disabled = false;
+        if (!blob) { note.textContent = "画像の作成に失敗しました。"; return; }
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement("a");
+        a.href = url;
+        a.download = "kotsukotsu-tozan.png";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+        note.textContent = "保存しました。";
+      }, "image/png");
+    });
+  });
+
+  render();
+})();
+</script>
+
+</body>
+</html>
