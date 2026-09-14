@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>読書クエスト＋ 💌</title>
+
+    <!-- 検索・SNSシェア用(OGP) -->
+    <meta
+      name="description"
+      content="読書をRPG化!ひとりでも、読書会でみんなでも。ミッションカードを引いて読書クエストに挑戦。アウトプットを共有して、EXPと応援コメントを贈り合おう。"
+    />
+    <meta property="og:title" content="読書クエスト＋ 💌｜応援コメントを贈り合う読書会" />
+    <meta
+      property="og:description"
+      content="読書をRPG化!ひとりでも、読書会でみんなでも。ミッションカードを引いて読書クエストに挑戦。アウトプットを共有して、EXPと応援コメントを贈り合おう。"
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://daidai-games.onrender.com/games/dokusho-quest-plus/" />
+    <meta property="og:image" content="https://daidai-games.onrender.com/games/dokusho-quest-plus/ogp.png" />
+    <meta property="og:site_name" content="読書クエスト＋" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <!-- PWA -->
+    <meta name="theme-color" content="#f59e0b" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="icon" href="icon-192.png" type="image/png" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+
+    <!-- フォント -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Zen+Maru+Gothic:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- React / Babel(JSX変換)/ Tailwind CSS -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- Babel は v7 系に固定(v8 は import 文を出力するためブラウザ直実行で動かない) -->
+    <script src="https://unpkg.com/@babel/standalone@7/babel.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- Socket.io クライアント(読書会モードのリアルタイム通信) -->
+    <script src="/socket.io/socket.io.js"></script>
+
+    <style type="text/tailwindcss">
+      /* .dark クラスでダークモードを切り替える */
+      @custom-variant dark (&:where(.dark, .dark *));
+
+      @theme {
+        --font-body: "Zen Maru Gothic", "Hiragino Maru Gothic ProN", sans-serif;
+        --font-pixel: "DotGothic16", "Zen Maru Gothic", monospace;
+
+        --animate-pop-in: pop-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+        --animate-fade-up: fade-up 0.5s ease-out both;
+        --animate-card-flip: card-flip 0.6s ease-out both;
+        --animate-sparkle: sparkle 1.2s ease-in-out infinite;
+        --animate-bounce-slow: bounce-slow 2s ease-in-out infinite;
+
+        @keyframes pop-in {
+          from { opacity: 0; transform: scale(0.8); }
+          to { opacity: 1; transform: scale(1); }
+        }
+        @keyframes fade-up {
+          from { opacity: 0; transform: translateY(12px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes card-flip {
+          from { opacity: 0; transform: rotateY(90deg) scale(0.9); }
+          to { opacity: 1; transform: rotateY(0deg) scale(1); }
+        }
+        @keyframes sparkle {
+          0%, 100% { opacity: 0.4; transform: scale(0.9); }
+          50% { opacity: 1; transform: scale(1.15); }
+        }
+        @keyframes bounce-slow {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-6px); }
+        }
+      }
+
+      body {
+        font-family: var(--font-body);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+
+    <!-- ゲームデータ・ロジック(プレーンJS) -->
+    <script src="data.js"></script>
+    <script src="storage.js"></script>
+
+    <!-- UIコンポーネント(JSX / Babelで変換) -->
+    <script type="text/babel" data-presets="react" src="components.js"></script>
+    <!-- 読書会モード(circle.js は app.js より先に読み込む) -->
+    <script type="text/babel" data-presets="react" src="circle.js"></script>
+    <script type="text/babel" data-presets="react" src="app.js"></script>
+
+    <!-- PWA: Service Worker は開発版では無効(キャッシュで古いコードが出るのを防ぐ)
+         公開するときは下のコメントを外して有効化する
+    <script>
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker.register("./sw.js").catch(() => {});
+        });
+      }
+    </script>
+    -->
+    <script>
+      // 開発版: すでに登録済みの Service Worker があれば解除しておく
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker
+          .getRegistrations()
+          .then((rs) => rs.forEach((r) => r.unregister()))
+          .catch(() => {});
+      }
+    </script>
+  </body>
+</html>
