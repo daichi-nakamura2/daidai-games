@@ -174,6 +174,31 @@ function roomCodeFromUrl() {
   }
 }
 
+/**
+ * 読書会をどう始めるかを決める。
+ *  - 直前まで参加していた部屋があれば、そこへ自動で戻る(autoRejoin)
+ *  - 招待リンク(?room=)で来たなら、そのコードを入れた入室フォームを出す
+ */
+function circleStart() {
+  const urlCode = roomCodeFromUrl();
+  const saved = DQ.loadCircleSession();
+  if (saved && (!urlCode || urlCode === saved.code)) {
+    return {
+      initialCode: saved.code,
+      initialName: saved.name,
+      autoRejoin: saved,
+    };
+  }
+  if (urlCode) {
+    return {
+      initialCode: urlCode,
+      initialName: saved ? saved.name : "",
+      autoRejoin: null,
+    };
+  }
+  return null;
+}
+
 // ---------- ルート(モード選択で切り替え) ----------
 function App() {
   const [theme, setTheme] = React.useState(DQ.loadTheme);
@@ -183,9 +208,9 @@ function App() {
   }, [theme]);
   const toggleTheme = () => setTheme(theme === "light" ? "dark" : "light");
 
-  // 招待リンクで来たら最初から読書会モード
-  const initialCode = roomCodeFromUrl();
-  const [mode, setMode] = React.useState(initialCode ? "circle" : null);
+  // 招待リンクで来たとき / 読書会の途中で閉じてしまったときは、最初から読書会モード
+  const start = React.useRef(circleStart()).current;
+  const [mode, setMode] = React.useState(start ? "circle" : null);
 
   if (mode === "circle") {
     return (
@@ -193,7 +218,9 @@ function App() {
         theme={theme}
         onToggleTheme={toggleTheme}
         onExit={() => setMode(null)}
-        initialCode={initialCode}
+        initialCode={start ? start.initialCode : ""}
+        initialName={start ? start.initialName : ""}
+        autoRejoin={start ? start.autoRejoin : null}
       />
     );
   }

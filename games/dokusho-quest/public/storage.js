@@ -5,6 +5,13 @@ window.DQ = window.DQ || {};
 
 const DQ_STORAGE_KEY = "dokusho-quest-v2-data-v1";
 const DQ_THEME_KEY = "dokusho-quest-v2-theme";
+const DQ_PLAYER_ID_KEY = "dokusho-quest-v2-player-id";
+const DQ_CIRCLE_KEY = "dokusho-quest-v2-circle";
+// 読書会に自動で戻る有効期限(これを過ぎたら普通の入室フォームから始める)
+const DQ_CIRCLE_MAX_AGE = 3 * 60 * 60 * 1000;
+
+// localStorage が使えない環境のための代役(そのタブのあいだだけ有効)
+let dqFallbackPlayerId = null;
 
 /** ゲームデータ(本・ログ・累計XP)を読み込む */
 DQ.loadGameData = function loadGameData() {
@@ -29,6 +36,60 @@ DQ.saveGameData = function saveGameData(data) {
     localStorage.setItem(DQ_STORAGE_KEY, JSON.stringify(data));
   } catch {
     // ストレージが使えない環境では保存をあきらめる(アプリは動き続ける)
+  }
+};
+
+/**
+ * この端末の固定プレイヤーID。
+ * 読書会では socket.id ではなくこのIDで人を識別するので、
+ * 再読み込み・画面ロック・電波切れでつなぎ直しても同じ自分として戻れる。
+ */
+DQ.getPlayerId = function getPlayerId() {
+  try {
+    let id = localStorage.getItem(DQ_PLAYER_ID_KEY);
+    if (!id) {
+      id = DQ.generateId();
+      localStorage.setItem(DQ_PLAYER_ID_KEY, id);
+    }
+    return id;
+  } catch {
+    if (!dqFallbackPlayerId) dqFallbackPlayerId = DQ.generateId();
+    return dqFallbackPlayerId;
+  }
+};
+
+/** 参加中の読書会(部屋コードと名前)を覚えておく */
+DQ.saveCircleSession = function saveCircleSession(code, name) {
+  try {
+    localStorage.setItem(
+      DQ_CIRCLE_KEY,
+      JSON.stringify({ code, name, at: Date.now() }),
+    );
+  } catch {
+    // 保存できなくても、そのタブのあいだは再接続で復帰できる
+  }
+};
+
+/** 直前に参加していた読書会を読み込む(古すぎる場合は null) */
+DQ.loadCircleSession = function loadCircleSession() {
+  try {
+    const raw = localStorage.getItem(DQ_CIRCLE_KEY);
+    if (!raw) return null;
+    const s = JSON.parse(raw);
+    if (!s || !s.code || !s.name) return null;
+    if (Date.now() - (s.at || 0) > DQ_CIRCLE_MAX_AGE) return null;
+    return { code: s.code, name: s.name };
+  } catch {
+    return null;
+  }
+};
+
+/** 読書会から意図的に退出したときに忘れる */
+DQ.clearCircleSession = function clearCircleSession() {
+  try {
+    localStorage.removeItem(DQ_CIRCLE_KEY);
+  } catch {
+    // 消せなくても実害はない
   }
 };
 

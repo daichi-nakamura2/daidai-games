@@ -50,9 +50,9 @@ DQ.Landing = function Landing({ theme, onToggleTheme, onPick }) {
 };
 
 // ---------- 読書会:入室フォーム ----------
-function CircleEntry({ error, initialCode, onCreate, onJoin }) {
+function CircleEntry({ error, initialCode, initialName, onCreate, onJoin }) {
   const [tab, setTab] = React.useState("join"); // join | create
-  const [name, setName] = React.useState("");
+  const [name, setName] = React.useState(initialName || "");
   const [code, setCode] = React.useState(initialCode || "");
 
   const submit = (e) => {
@@ -431,7 +431,7 @@ function SessionBanner({ session }) {
 }
 
 // ---------- 読書会:部屋のメイン画面 ----------
-function RoomView({ room, selfId, onStartQuest, onGift, onExit }) {
+function RoomView({ room, selfId, online, onStartQuest, onGift, onExit }) {
   const [copied, setCopied] = React.useState(false);
   const [linkCopied, setLinkCopied] = React.useState(false);
   const me = room.players.find((p) => p.id === selfId);
@@ -495,6 +495,15 @@ function RoomView({ room, selfId, onStartQuest, onGift, onExit }) {
         </p>
       </section>
 
+      {!online && (
+        <p className="rounded-xl bg-amber-100 px-3 py-2 text-center text-sm font-bold text-amber-800 dark:bg-amber-950 dark:text-amber-300">
+          📡 通信が切れました。つなぎ直しています…
+          <span className="block text-xs font-normal">
+            戻れば同じ自分のまま続けられます(EXPも投稿も残ります)
+          </span>
+        </p>
+      )}
+
       <SessionBanner session={room.session} />
 
       <Roster players={room.players} selfId={selfId} hostId={room.hostId} />
@@ -538,7 +547,7 @@ function RoomView({ room, selfId, onStartQuest, onGift, onExit }) {
         onClick={onExit}
         className="mx-auto block text-sm text-stone-500 underline dark:text-stone-400"
       >
-        ← 読書会から退出してモード選択へ
+        ← 読書会から退出する(次に開いても戻りません)
       </button>
     </div>
   );
@@ -588,11 +597,24 @@ function CircleBookInput({ onNext, onBack }) {
 }
 
 // ---------- 読書会アプリ本体 ----------
-DQ.CircleApp = function CircleApp({ theme, onToggleTheme, onExit, initialCode }) {
+DQ.CircleApp = function CircleApp({
+  theme,
+  onToggleTheme,
+  onExit,
+  initialCode,
+  initialName,
+  autoRejoin, // { code, name } があれば、開いた瞬間に元の部屋へ戻る
+}) {
   const socketRef = React.useRef(null);
-  const [phase, setPhase] = React.useState("entry"); // entry | room
+  // 端末の固定ID。これで「同じ人」と分かるので、つなぎ直しても別人にならない
+  const playerIdRef = React.useRef(DQ.getPlayerId());
+  // つなぎ直したときに、どの部屋へどの名前で戻るか
+  const rejoinRef = React.useRef(autoRejoin || null);
+  const pendingNameRef = React.useRef(autoRejoin ? autoRejoin.name : "");
+  const [phase, setPhase] = React.useState(autoRejoin ? "rejoining" : "entry"); // entry | rejoining | room
   const [room, setRoom] = React.useState(null);
   const [selfId, setSelfId] = React.useState(null);
+  const [online, setOnline] = React.useState(true);
   const [error, setError] = React.useState("");
 
   // クエストのサブ画面: null | book | mission | waiting(読書タイム待ち) | memo
@@ -604,13 +626,43 @@ DQ.CircleApp = function CircleApp({ theme, onToggleTheme, onExit, initialCode })
     // このゲーム専用の Socket.io ネームスペースにつなぐ
     const socket = io("/games/dokusho-quest");
     socketRef.current = socket;
-    socket.on("joined", ({ selfId }) => {
+
+    socket.on("connect", () => {
+      setOnline(true);
+      // 通信が切れて つなぎ直したとき(または再読み込み後)は、
+      // 同じ playerId で入り直して元の自分に復帰する
+      const r = rejoinRef.current;
+      if (r) {
+        socket.emit("joinRoom", {
+          code: r.code,
+          name: r.name,
+          totalXp: DQ.loadGameData().totalXp,
+          playerId: playerIdRef.current,
+        });
+      }
+    });
+    socket.on("disconnect", () => setOnline(false));
+
+    socket.on("joined", ({ code, selfId }) => {
       setSelfId(selfId);
       setPhase("room");
       setError("");
+      const name = pendingNameRef.current;
+      if (code && name) {
+        rejoinRef.current = { code, name };
+        DQ.saveCircleSession(code, name);
+      }
     });
     socket.on("roomUpdate", (state) => setRoom(state));
-    socket.on("errorMsg", (msg) => setError(msg));
+    socket.on("errorMsg", (msg) => {
+      // 自動で戻ろうとして部屋が無かった場合は、入室フォームに戻す
+      if (rejoinRef.current) {
+        rejoinRef.current = null;
+        DQ.clearCircleSession();
+      }
+      setPhase("entry");
+      setError(msg);
+    });
     return () => socket.disconnect();
   }, []);
 
@@ -625,17 +677,29 @@ DQ.CircleApp = function CircleApp({ theme, onToggleTheme, onExit, initialCode })
     }
   }, [room, selfId]);
 
-  const createRoom = (name) =>
+  const createRoom = (name) => {
+    pendingNameRef.current = name;
     socketRef.current.emit("createRoom", {
       name,
       totalXp: DQ.loadGameData().totalXp,
+      playerId: playerIdRef.current,
     });
-  const joinRoom = (code, name) =>
+  };
+  const joinRoom = (code, name) => {
+    pendingNameRef.current = name;
     socketRef.current.emit("joinRoom", {
       code,
       name,
       totalXp: DQ.loadGameData().totalXp,
+      playerId: playerIdRef.current,
     });
+  };
+  // 自分の意思で退出したときだけ、自動復帰の記憶を消す
+  const leaveCircle = () => {
+    rejoinRef.current = null;
+    DQ.clearCircleSession();
+    onExit();
+  };
   const giftXp = (outputId) =>
     socketRef.current.emit("giftXp", { outputId });
   const startReading = (minutes) =>
@@ -692,6 +756,27 @@ DQ.CircleApp = function CircleApp({ theme, onToggleTheme, onExit, initialCode })
     </div>
   );
 
+  // 前回の部屋に自動で戻っているところ
+  if (phase === "rejoining") {
+    return shell(
+      <div className="space-y-3 text-center">
+        <p className="font-pixel text-lg text-stone-800 dark:text-amber-100">
+          読書会にもどっています…
+        </p>
+        <p className="text-sm text-stone-500 dark:text-stone-400">
+          部屋 {(autoRejoin && autoRejoin.code) || ""} に再接続中です
+        </p>
+        <button
+          type="button"
+          onClick={leaveCircle}
+          className="mx-auto block text-sm text-stone-500 underline dark:text-stone-400"
+        >
+          ← もどらずにモード選択へ
+        </button>
+      </div>,
+    );
+  }
+
   // 入室前
   if (phase === "entry") {
     return shell(
@@ -699,12 +784,13 @@ DQ.CircleApp = function CircleApp({ theme, onToggleTheme, onExit, initialCode })
         <CircleEntry
           error={error}
           initialCode={initialCode}
+          initialName={initialName}
           onCreate={createRoom}
           onJoin={joinRoom}
         />
         <button
           type="button"
-          onClick={onExit}
+          onClick={leaveCircle}
           className="mx-auto block text-sm text-stone-500 underline dark:text-stone-400"
         >
           ← モード選択にもどる
@@ -780,9 +866,10 @@ DQ.CircleApp = function CircleApp({ theme, onToggleTheme, onExit, initialCode })
     <RoomView
       room={room}
       selfId={selfId}
+      online={online}
       onStartQuest={() => setQuestStep("book")}
       onGift={giftXp}
-      onExit={onExit}
+      onExit={leaveCircle}
     />,
   );
 };

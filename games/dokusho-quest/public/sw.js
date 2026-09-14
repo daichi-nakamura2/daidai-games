@@ -2,7 +2,7 @@
 // Service Worker: オフライン対応のためのキャッシュ管理
 // アプリのファイルを更新したら CACHE_VERSION を上げること
 // ============================================================
-const CACHE_VERSION = "dokusho-quest-daidai-v1";
+const CACHE_VERSION = "dokusho-quest-daidai-v2";
 
 // インストール時にキャッシュするアプリ本体のファイル
 const APP_ASSETS = [
@@ -12,6 +12,7 @@ const APP_ASSETS = [
   "./storage.js",
   "./components.js",
   "./app.js",
+  "./circle.js",
   "./manifest.webmanifest",
   "./icon-192.png",
   "./icon-512.png",

@@ -17,6 +17,12 @@ const MAX_NAME = 20;
 const MAX_TITLE = 60;
 const MAX_MEMO = 500;
 const MAX_MISSION = 60;
+const MAX_PLAYER_ID = 40;
+// 全員の接続が切れても、この時間だけは部屋を残す(再読み込み・電波切れからの復帰用)
+const ROOM_GRACE_MS = 10 * 60 * 1000;
+// ホストが切れてから、別の人に👑を引き継ぐまでの猶予
+// (再読み込みや一瞬の電波切れでホストが替わってしまわないように)
+const HOST_GRACE_MS = 60 * 1000;
 const ALLOWED_MINUTES = [15, 25, 60, 90]; // みんなで読書の時間の選択肢
 
 /** @type {Map<string, object>} 部屋コード -> 部屋 */
@@ -40,6 +46,12 @@ function cleanStr(s, max) {
   return String(s || "").trim().slice(0, max);
 }
 
+// プレイヤーID(端末が localStorage に持つ固定ID)。無ければ socket.id で代用する
+function cleanPlayerId(id, fallback) {
+  const s = String(id || "").replace(/[^A-Za-z0-9_-]/g, "").slice(0, MAX_PLAYER_ID);
+  return s || fallback;
+}
+
 function cleanXp(n) {
   const x = Math.round(Number(n) || 0);
   return Math.max(0, Math.min(10000000, x));
@@ -52,21 +64,81 @@ function baseXpFor({ minutes, missionBonus, hasMemo }) {
   return 20 + m * 2 + bonus + (hasMemo ? 20 : 0);
 }
 
-function createRoom(hostSocketId, hostName, totalXp) {
+function createRoom(hostSocketId, hostPlayerId, hostName, totalXp) {
   const code = makeRoomCode();
   const room = {
     code,
-    hostId: hostSocketId,
-    // socketId -> { name, totalXp, connected }
+    hostId: hostPlayerId,
+    // playerId -> { name, totalXp, connected, sockets }
+    //   キーは socket.id ではなく端末の固定IDなので、
+    //   再読み込みや電波切れでつなぎ直しても同じ人として復帰できる
     players: new Map(),
     feed: [], // 読書アウトプットの配列(古い順)
     nextOutputId: 1,
     session: null, // みんなで読書の共有タイマー { minutes, endsAt }
     sessionTimeout: null, // 終了時に全員へ再通知するためのタイマー
+    emptyTimeout: null, // 全員切断後、部屋を片づけるまでの猶予タイマー
+    hostTimeout: null, // ホストの引き継ぎを待つ猶予タイマー
   };
-  room.players.set(hostSocketId, { name: hostName, totalXp, connected: true });
+  room.players.set(hostPlayerId, {
+    name: hostName,
+    totalXp,
+    connected: true,
+    // 同じ人が複数タブ(端末)で開いていても1人として扱えるよう、接続を集合で持つ
+    sockets: new Set([hostSocketId]),
+  });
   rooms.set(code, room);
   return room;
+}
+
+// 誰かが戻ってきたら、部屋の片づけ予約を取り消す
+function cancelRoomCleanup(room) {
+  if (room.emptyTimeout) {
+    clearTimeout(room.emptyTimeout);
+    room.emptyTimeout = null;
+  }
+}
+
+// 全員の接続が切れたときは、すぐ消さずに猶予時間だけ部屋を残す
+function scheduleRoomCleanup(room) {
+  cancelRoomCleanup(room);
+  room.emptyTimeout = setTimeout(() => {
+    room.emptyTimeout = null;
+    const r = rooms.get(room.code);
+    if (!r || r.emptyTimeout) return;
+    const anyConnected = [...r.players.values()].some((p) => p.connected);
+    if (anyConnected) return;
+    if (r.sessionTimeout) clearTimeout(r.sessionTimeout);
+    if (r.hostTimeout) clearTimeout(r.hostTimeout);
+    rooms.delete(r.code);
+  }, ROOM_GRACE_MS);
+}
+
+// ホストが戻ってきた(または誰かが入ってきた)ので、引き継ぎ予約を取り消す
+function cancelHostHandover(room) {
+  if (room.hostTimeout) {
+    clearTimeout(room.hostTimeout);
+    room.hostTimeout = null;
+  }
+}
+
+// ホストが切れたとき、すぐには替えずに猶予を置いてから引き継ぐ
+function scheduleHostHandover(room, leftHostId) {
+  cancelHostHandover(room);
+  room.hostTimeout = setTimeout(() => {
+    room.hostTimeout = null;
+    const r = rooms.get(room.code);
+    if (!r || r.hostId !== leftHostId) return;
+    const host = r.players.get(leftHostId);
+    if (host && host.connected) return; // 戻ってきていた
+    const next = [...r.players.entries()].find(
+      ([id, p]) => id !== leftHostId && p.connected,
+    );
+    if (next) {
+      r.hostId = next[0];
+      broadcastState(r);
+    }
+  }, HOST_GRACE_MS);
 }
 
 // クライアントに送る公開状態
@@ -111,33 +183,59 @@ function broadcastState(room) {
 // ---------- Socket.io ----------
 function onConnection(socket) {
   // 部屋をつくる
-  socket.on("createRoom", ({ name, totalXp }) => {
+  socket.on("createRoom", ({ name, totalXp, playerId }) => {
+    const pid = cleanPlayerId(playerId, socket.id);
     const room = createRoom(
       socket.id,
+      pid,
       cleanStr(name, MAX_NAME) || "ホスト",
       cleanXp(totalXp),
     );
     socket.join(room.code);
     socket.data.roomCode = room.code;
-    socket.emit("joined", { code: room.code, selfId: socket.id });
+    socket.data.playerId = pid;
+    socket.emit("joined", { code: room.code, selfId: pid });
     broadcastState(room);
   });
 
-  // 部屋に入る(読書会は途中参加OK)
-  socket.on("joinRoom", ({ code, name, totalXp }) => {
+  // 部屋に入る(読書会は途中参加OK / 同じ端末なら再入室で元の自分に戻る)
+  socket.on("joinRoom", ({ code, name, totalXp, playerId }) => {
     const room = rooms.get(cleanStr(code, 8).toUpperCase());
     if (!room) {
       socket.emit("errorMsg", "その部屋コードは見つかりませんでした。");
       return;
     }
-    room.players.set(socket.id, {
-      name: cleanStr(name, MAX_NAME) || "プレイヤー",
-      totalXp: cleanXp(totalXp),
-      connected: true,
-    });
+    const pid = cleanPlayerId(playerId, socket.id);
+    const newName = cleanStr(name, MAX_NAME);
+    const existing = room.players.get(pid);
+
+    if (existing) {
+      // 再入室: EXPも投稿も引き継ぐ(XPはサーバーの値が正)
+      existing.sockets.add(socket.id);
+      existing.connected = true;
+      if (newName && newName !== existing.name) {
+        existing.name = newName;
+        // 過去の投稿の表示名もそろえる
+        for (const o of room.feed) {
+          if (o.authorId === pid) o.authorName = newName;
+        }
+      }
+    } else {
+      room.players.set(pid, {
+        name: newName || "プレイヤー",
+        totalXp: cleanXp(totalXp),
+        connected: true,
+        sockets: new Set([socket.id]),
+      });
+    }
+
+    cancelRoomCleanup(room);
+    // 元ホストが戻ってきたなら、👑はそのまま本人に残す
+    if (room.hostId === pid) cancelHostHandover(room);
     socket.join(room.code);
     socket.data.roomCode = room.code;
-    socket.emit("joined", { code: room.code, selfId: socket.id });
+    socket.data.playerId = pid;
+    socket.emit("joined", { code: room.code, selfId: pid });
     broadcastState(room);
   });
 
@@ -145,7 +243,7 @@ function onConnection(socket) {
   socket.on("submitOutput", (data) => {
     const room = rooms.get(socket.data.roomCode);
     if (!room) return;
-    const player = room.players.get(socket.id);
+    const player = room.players.get(socket.data.playerId);
     if (!player) return;
 
     const minutes = Math.max(1, Math.min(600, Math.round(Number(data.minutes) || 1)));
@@ -158,7 +256,7 @@ function onConnection(socket) {
 
     const output = {
       id: room.nextOutputId++,
-      authorId: socket.id,
+      authorId: socket.data.playerId,
       authorName: player.name,
       bookTitle: cleanStr(data.bookTitle, MAX_TITLE) || "(無題)",
       missionIcon: cleanStr(data.missionIcon, 8),
@@ -178,14 +276,15 @@ function onConnection(socket) {
   socket.on("giftXp", ({ outputId }) => {
     const room = rooms.get(socket.data.roomCode);
     if (!room) return;
-    const gifter = room.players.get(socket.id);
+    const pid = socket.data.playerId;
+    const gifter = room.players.get(pid);
     if (!gifter) return;
     const output = room.feed.find((o) => o.id === Number(outputId));
     if (!output) return;
-    if (output.authorId === socket.id) return;
-    if (output.gifts[socket.id]) return;
+    if (output.authorId === pid) return; // 自分の投稿には贈れない
+    if (output.gifts[pid]) return; // 1投稿につき1人1回
 
-    output.gifts[socket.id] = true;
+    output.gifts[pid] = true;
     const author = room.players.get(output.authorId);
     if (author) author.totalXp += GIFT_XP_TO_AUTHOR;
     gifter.totalXp += GIFT_XP_TO_GIFTER;
@@ -195,7 +294,7 @@ function onConnection(socket) {
   // ホストが「みんなで一斉に読書」を開始(全員が同じカウントダウンを見る)
   socket.on("startReading", ({ minutes }) => {
     const room = rooms.get(socket.data.roomCode);
-    if (!room || room.hostId !== socket.id) return;
+    if (!room || room.hostId !== socket.data.playerId) return;
     const m = ALLOWED_MINUTES.includes(Number(minutes)) ? Number(minutes) : 15;
     if (room.sessionTimeout) clearTimeout(room.sessionTimeout);
     room.session = { minutes: m, endsAt: Date.now() + m * 60000 };
@@ -211,7 +310,7 @@ function onConnection(socket) {
   // ホストが読書タイムを早めに終える
   socket.on("stopReading", () => {
     const room = rooms.get(socket.data.roomCode);
-    if (!room || room.hostId !== socket.id || !room.session) return;
+    if (!room || room.hostId !== socket.data.playerId || !room.session) return;
     if (room.sessionTimeout) {
       clearTimeout(room.sessionTimeout);
       room.sessionTimeout = null;
@@ -223,22 +322,22 @@ function onConnection(socket) {
   socket.on("disconnect", () => {
     const room = rooms.get(socket.data.roomCode);
     if (!room) return;
-    const player = room.players.get(socket.id);
-    if (player) player.connected = false;
+    const pid = socket.data.playerId;
+    const player = room.players.get(pid);
+    if (!player) return;
+    player.sockets.delete(socket.id);
+    // 別のタブ・別の接続がまだ生きているなら、その人はまだ部屋にいる
+    if (player.sockets.size > 0) return;
+    player.connected = false;
 
-    // ホストが抜けたら、接続中の別の人にホストを引き継ぐ
-    if (room.hostId === socket.id) {
-      const next = [...room.players.entries()].find(
-        ([id, p]) => id !== socket.id && p.connected,
-      );
-      if (next) room.hostId = next[0];
-    }
+    // ホストが抜けても、しばらくは👑を空けて待つ
+    // (再読み込み・一瞬の電波切れでホストが替わらないように)
+    if (room.hostId === pid) scheduleHostHandover(room, pid);
 
-    // 全員切断したら部屋を破棄
+    // 全員切断しても、すぐには消さない(猶予のあいだに戻ってこられる)
     const anyConnected = [...room.players.values()].some((p) => p.connected);
     if (!anyConnected) {
-      if (room.sessionTimeout) clearTimeout(room.sessionTimeout);
-      rooms.delete(room.code);
+      scheduleRoomCleanup(room);
       return;
     }
     broadcastState(room);
