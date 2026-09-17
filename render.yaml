@@ -4,7 +4,8 @@ services:
   - type: web
     name: daidai-games
     runtime: node
-    plan: free
+    # plan はあえて書かない。書くと push のたびにそのプランへ戻されることがある
+    # (有料プランは Render → Settings → Instance Type で切り替える)
     region: singapore
     buildCommand: npm install
     startCommand: npm start
