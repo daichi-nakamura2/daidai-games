@@ -501,6 +501,8 @@ DQ.FEEDBACK_STAMPS = [
 ];
 
 // ---------- イベント後の報告先 ----------
-// LINEオープンチャットのURLが決まったら、ここに入れるとボタンとして出る。
-DQ.OPENCHAT_URL = "";
-DQ.OPENCHAT_NAME = "読書クエストのオープンチャット";
+// 24時間以内に最終アクションを試したら、ここに報告してもらう。
+DQ.OPENCHAT_URL =
+  "https://line.me/ti/g2/pzvHx9gpLkfbP-_Ovho8OW7dBZkqdrZREXqZXQ?utm_source=invitation&utm_medium=link_copy&utm_campaign=default";
+DQ.OPENCHAT_NAME = "好奇心ギルド";
+DQ.OPENCHAT_TAGLINE = "小さな挑戦を応援し合う場所";

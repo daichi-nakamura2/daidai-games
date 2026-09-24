@@ -1085,7 +1085,12 @@ function DoneView({ room, selfId, entriesById }) {
           📣 やってみたら、報告しよう
         </h3>
         <p className="mt-1.5 text-sm text-stone-600 dark:text-stone-300">
-          {DQ.OPENCHAT_NAME}に「やってみました!」と書き込んでください。
+          LINEオープンチャット
+          <strong className="text-green-700 dark:text-green-400">
+            「{DQ.OPENCHAT_NAME}
+            {DQ.OPENCHAT_TAGLINE ? `｜${DQ.OPENCHAT_TAGLINE}` : ""}」
+          </strong>
+          に「やってみました!」と書き込んでください。
           写真やスクリーンショットでもOK。仲間の報告には「ナイスチャレンジ!」と返そう。
         </p>
         {DQ.OPENCHAT_URL ? (
@@ -1095,7 +1100,7 @@ function DoneView({ room, selfId, entriesById }) {
             rel="noopener"
             className="mt-3 block w-full rounded-full bg-gradient-to-r from-green-500 to-emerald-500 py-3 text-center font-bold text-white shadow transition hover:brightness-110 active:scale-95"
           >
-            💬 オープンチャットをひらく
+            💬 {DQ.OPENCHAT_NAME}に参加する
           </a>
         ) : null}
         {mine && mine.hasFinal && (
@@ -1549,10 +1554,19 @@ DQ.EventApp = function EventApp({
             />
           )}
         />
-      ) : myEntry ? (
-        <FinalForm entry={myEntry} onSubmit={submitFinal} />
       ) : (
-        <DQ.WaitingNote phase="final" />
+        // 途中参加などで何も書いていない人でも、最終アクションだけは決められるようにする
+        <FinalForm
+          entry={
+            myEntry || {
+              draftAction: "",
+              finalAction: "",
+              feedback: [],
+              feedbackCount: 0,
+            }
+          }
+          onSubmit={submitFinal}
+        />
       );
   } else if (p === "done") {
     body = <DoneView room={room} selfId={selfId} entriesById={entriesById} />;
