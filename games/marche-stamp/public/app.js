@@ -21,12 +21,17 @@
 
   /* ---------- 保存 ---------- */
   const blank = () => ({ name: "", stamps: {}, redeemed: {} });
+  // QRをカメラアプリで読むとタブが増えるので、別タブの記録で上書きしないよう
+  // 書き込む直前にかならず読み直す（load）。
   let state;
-  try {
-    state = Object.assign(blank(), JSON.parse(localStorage.getItem(R.storageKey)) || {});
-  } catch {
-    state = blank();
-  }
+  const load = () => {
+    try {
+      state = Object.assign(blank(), JSON.parse(localStorage.getItem(R.storageKey)) || {});
+    } catch {
+      state = state || blank();
+    }
+  };
+  load();
   const save = () => {
     try { localStorage.setItem(R.storageKey, JSON.stringify(state)); } catch {}
   };
@@ -85,6 +90,7 @@
   /* ---------- スタンプを押す ---------- */
   function stamp(id) {
     const b = booths.find((x) => x.id === id);
+    load();
     const already = Boolean(state.stamps[id]);
     const before = count();
     if (!already) {
@@ -209,6 +215,7 @@
         $("pinForm").onsubmit = (e) => {
           e.preventDefault();
           if (cyrb53(`staff:${$("pinIn").value.trim()}`) === R.staffPinHash) {
+            load();
             state.redeemed[r.label] = Date.now();
             save();
             renderStatus();
@@ -230,7 +237,7 @@
     $("cert").hidden = false;
     if (!state.redeemed[r.label]) confetti();
   }
-  $("cName").oninput = (e) => { state.name = e.target.value; save(); };
+  $("cName").oninput = (e) => { load(); state.name = e.target.value; save(); };
   $("cClose").onclick = () => { $("cert").hidden = true; clearInterval(clockTimer); };
   $("rewards").addEventListener("click", (e) => {
     const b = e.target.closest("[data-reward]");
@@ -238,12 +245,79 @@
   });
 
   $("resetBtn").onclick = () => {
-    if (confirm("スタンプの記録をすべて消します。よろしいですか？")) {
+    if (confirm("朱印の記録をすべて消します。よろしいですか？")) {
       state = blank();
       save();
       render();
     }
   };
+
+  // 別タブで押印したら、このタブの表示も追いつかせる
+  window.addEventListener("storage", (e) => { if (e.key === R.storageKey) { load(); render(); } });
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) { load(); render(); } });
+
+  /* ---------- ページ内QRリーダー（同じタブのまま押印できる） ---------- */
+  let scanStream = null, scanRaf = 0;
+  const scanCanvas = document.createElement("canvas");
+  const scanCtx = scanCanvas.getContext("2d", { willReadFrequently: true });
+
+  function parseQR(text) {
+    try {
+      const u = new URL(text, location.href);
+      return { id: u.searchParams.get("b"), code: u.searchParams.get("c") || "" };
+    } catch {
+      return null;
+    }
+  }
+
+  async function openScanner() {
+    $("scanMsg").textContent = "ブースのQRコードを枠に合わせてください";
+    $("scan").hidden = false;
+    if (!navigator.mediaDevices?.getUserMedia || !window.jsQR) {
+      $("scanMsg").textContent = "この端末ではカメラを使えません。枠をタップして合言葉をご入力ください";
+      return;
+    }
+    try {
+      scanStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false });
+    } catch {
+      $("scanMsg").textContent = "カメラの使用が許可されませんでした。枠をタップして合言葉をご入力ください";
+      return;
+    }
+    const v = $("scanVideo");
+    v.srcObject = scanStream;
+    await v.play().catch(() => {});
+    const loop = () => {
+      if (!scanStream) return;
+      if (v.readyState >= 2 && v.videoWidth) {
+        // 解析は縮小してから（スマホでも軽く）
+        const w = 480, h = Math.round((v.videoHeight / v.videoWidth) * w);
+        scanCanvas.width = w;
+        scanCanvas.height = h;
+        scanCtx.drawImage(v, 0, 0, w, h);
+        const hit = window.jsQR(scanCtx.getImageData(0, 0, w, h).data, w, h, { inversionAttempts: "dontInvert" });
+        if (hit && hit.data) {
+          const r = parseQR(hit.data);
+          if (r && booths.some((b) => b.id === r.id) && checkCode(r.id, r.code)) {
+            closeScanner();
+            stamp(r.id);
+            return;
+          }
+          $("scanMsg").textContent = r && r.id ? "このQRコードは読み取れませんでした" : "スタンプ帖のQRコードではないようです";
+        }
+      }
+      scanRaf = requestAnimationFrame(loop);
+    };
+    loop();
+  }
+  function closeScanner() {
+    cancelAnimationFrame(scanRaf);
+    scanStream?.getTracks().forEach((t) => t.stop());
+    scanStream = null;
+    $("scanVideo").srcObject = null;
+    $("scan").hidden = true;
+  }
+  $("scanBtn").onclick = openScanner;
+  $("scanClose").onclick = closeScanner;
 
   function toast(msg) {
     $("toast").textContent = msg;

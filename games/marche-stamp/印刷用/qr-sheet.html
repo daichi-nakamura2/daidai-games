@@ -44,7 +44,7 @@
         <div class="head">${R.eventName} スタンプ帖</div>
         <div class="shop">参加はこちら</div>
         <div class="qr">${qrSvg(BASE_URL)}</div>
-        <div class="guide">スマホのカメラで読んでスタート！<br>各ブースのQRを読むとスタンプが押されます</div>
+        <div class="guide">スマホのカメラで読んでスタート！<br>二つめからは帖の「QRを読んで押印」ボタンでお読みください</div>
       </div>`);
       cards.push(`<div class="poster">
         <div class="head">受付スタッフ用（掲示しない）</div>
@@ -64,7 +64,7 @@
           <div class="shop">${b.shop}</div>
           <div class="qr">${qrSvg(url)}</div>
           <div class="code">読めないときの合言葉<b>${CODES[b.id]}</b></div>
-          <div class="guide">スマホのカメラでQRを読むとスタンプGET！</div>
+          <div class="guide">スタンプ帖の「QRを読んで押印」ボタンで読むと朱印が押されます</div>
         </div>`);
       });
       let html = "";

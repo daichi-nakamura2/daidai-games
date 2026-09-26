@@ -24,17 +24,18 @@
         <div class="bar"><div class="fill" id="fill"></div><div id="marks"></div></div>
         <p class="next" id="next"></p>
       </div>
+      <button class="scan-btn" id="scanBtn"><span class="cam" aria-hidden="true"></span>QRを読んで押印</button>
     </header>
 
     <main>
       <section class="howto" id="howto">
         <h2>遊び方</h2>
         <ol>
-          <li><span>一</span>各ブースの <b>QRコード</b> をスマホのカメラで読む</li>
+          <li><span>一</span>上の <b>「QRを読んで押印」</b> でブースのQRコードを読む</li>
           <li><span>二</span>このスタンプ帖に朱印が押されます</li>
           <li><span>三</span>集まったら <b>受付</b> でこの画面を見せて特典を</li>
         </ol>
-        <p class="small">QRが読めないときは、下の枠をタップしてブースの <b>四桁の合言葉</b> をご入力ください。</p>
+        <p class="small">カメラアプリで読むと、そのたびにタブが増えてしまいます。二つめからはこの画面のボタンをお使いください。QRが読めないときは、下の枠をタップしてブースの <b>四桁の合言葉</b> をご入力ください。</p>
       </section>
 
       <section id="rewards" class="rewards"></section>
@@ -94,8 +95,19 @@
       </div>
     </div>
 
+    <!-- QRリーダー -->
+    <div class="scan" id="scan" hidden>
+      <video id="scanVideo" playsinline muted></video>
+      <div class="scan-frame"><i></i><i></i><i></i><i></i></div>
+      <div class="scan-ui">
+        <p id="scanMsg"></p>
+        <button class="btn" id="scanClose">閉じる</button>
+      </div>
+    </div>
+
     <div class="toast" id="toast" hidden></div>
 
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
     <script src="booths.js"></script>
     <script src="app.js"></script>
   </body>
