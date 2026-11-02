@@ -8,7 +8,7 @@ window.RALLY = {
   storageKey: "marche-stamp-v1",
   // 特典のしきい値。count 個集めたら受け取れる。
   rewards: [
-    { count: 5, label: "達成賞", note: "受付でこの画面をお見せください" },
+    { count: 3, label: "達成賞", note: "受付でこの画面をお見せください" },
     { count: 18, label: "コンプリート賞", note: "全ブース満願。受付でこの画面をお見せください" },
   ],
   staffPinHash: "97ee1e2765542",
