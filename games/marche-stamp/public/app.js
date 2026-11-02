@@ -40,7 +40,7 @@
   /* ---------- 描画 ---------- */
   const KANJI = ["一", "二", "三", "四", "五", "六", "七", "八", "九", "十", "十一", "十二", "十三", "十四", "十五", "十六", "十七", "十八", "十九", "二十"];
   const kan = (id) => { const i = booths.findIndex((b) => b.id === id); return KANJI[i] || String(i + 1); };
-  const sealInner = (b) => `<div><div class="n">其の${kan(b.id)}</div><div class="t">${esc(short(b.shop))}</div></div>`;
+  const sealInner = (b) => `<div><div class="n">其の${kan(b.id)}</div><div class="t">${esc(b.stamp || short(b.shop))}</div></div>`;
   const hankoHTML = (b) => `<div class="hanko" style="--r:${rot(b.id)}deg">${sealInner(b)}</div>`;
   const rot = (id) => (parseInt(id.slice(1), 10) * 37) % 30 - 18;
   const short = (s) => s.replace(/（.*?）|\(.*?\)/g, "").split(/\s+/).slice(-1)[0].slice(0, 12);
