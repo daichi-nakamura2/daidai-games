@@ -24,7 +24,7 @@ window.RALLY = {
     { id: "b08", shop: "メナードフェイシャルサロン 松本惣社", owner: "細矢文", menu: "AIでお肌分析", stamp: "メナード", hash: "12ee52a2196f8e" },
     { id: "b09", shop: "陰陽師", owner: "丸山優子（イモアライユウコ）", menu: "開運のためのプチセッション", stamp: "陰陽師", hash: "16319ff10d5f0f" },
     { id: "b10", shop: "リラクゼーションサロン シュシュ", owner: "諏訪まゆみ", menu: "たった足裏であなたの健康状態丸分かり！", stamp: "シュシュ", hash: "198dfd4e87feaf" },
-    { id: "b11", shop: "だいだい", owner: "中村大地", menu: "オリジナルゲーム体験", stamp: "だいだい", hash: "1ccfdd02eb8f17" },
+    { id: "b11", shop: "だいだい屋", owner: "中村大地", menu: "オリジナルゲーム体験と書籍の販売", stamp: "だいだい屋", hash: "1ccfdd02eb8f17" },
     { id: "b12", shop: "glitter balloons", owner: "吉田嘉名", menu: "写真を雑誌風につくろう！", stamp: "glitter", hash: "17279481029822" },
     { id: "b13", shop: "ドラマワークファシリテーター", owner: "なかざわ りえ", menu: "想像力全開★観る・聴く・感じる・表す ― 遊びながら磨くドラマワーク体験", stamp: "ドラマワーク", hash: "117e3c62379e46" },
     { id: "b14", shop: "ドレス試着会", owner: "宮澤理恵", menu: "ドレス試着会", stamp: "ドレス", hash: "d9cca21a173ec" },
