@@ -25,6 +25,7 @@
         <p class="next" id="next"></p>
       </div>
       <button class="scan-btn" id="scanBtn"><span class="cam" aria-hidden="true"></span>QRを読んで押印</button>
+      <button class="map-btn" id="mapBtn">会場地図をひらく<span>どこで朱印がもらえるか</span></button>
     </header>
 
     <main>
@@ -67,6 +68,8 @@
           </div>
         </div>
         <p class="s-menu" id="sMenu"></p>
+        <p class="s-when" id="sWhen" hidden></p>
+        <button class="s-map" id="sMap">地図で場所を見る</button>
         <div id="sAction"></div>
       </div>
     </div>
@@ -95,6 +98,21 @@
       </div>
     </div>
 
+    <!-- 会場地図 -->
+    <div class="map" id="map" hidden>
+      <div class="map-head">
+        <h2>会場地図<small id="mapPlace"></small></h2>
+        <button class="x" id="mapClose" aria-label="閉じる">×</button>
+      </div>
+      <div class="floor-tabs" id="floorTabs"></div>
+      <div class="map-scroll">
+        <div class="map-body"><svg id="mapSvg" xmlns="http://www.w3.org/2000/svg"></svg></div>
+        <p class="map-legend"><span class="lg-todo"></span>まだ<span class="lg-done"></span>朱印済み　印をタップすると詳しく見られます</p>
+        <ul class="floor-list" id="floorList"></ul>
+      </div>
+      <div class="map-foot"><button class="btn" id="mapBack">帖にもどる</button></div>
+    </div>
+
     <!-- QRリーダー -->
     <div class="scan" id="scan" hidden>
       <video id="scanVideo" playsinline muted></video>
@@ -109,6 +127,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
     <script src="booths.js"></script>
+    <script src="map.js"></script>
     <script src="app.js"></script>
   </body>
 </html>

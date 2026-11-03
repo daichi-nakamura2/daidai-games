@@ -98,6 +98,7 @@
       save();
     }
     render(already ? null : id);
+    if (!$("map").hidden) renderMap();
     $("fxHanko").innerHTML = sealInner(b);
     $("fxHanko").style.setProperty("--r", `${rot(b.id)}deg`);
     // アニメーションを毎回やり直す
@@ -161,6 +162,12 @@
     $("sShop").textContent = b.shop;
     $("sOwner").textContent = b.owner;
     $("sMenu").textContent = b.menu;
+    $("sWhen").hidden = !b.when;
+    $("sWhen").textContent = b.when ? `時間：${b.when}` : "";
+    const fl = floorOf(id);
+    $("sMap").hidden = !fl;
+    $("sMap").textContent = fl ? `地図で場所を見る（${fl.name}）` : "";
+    $("sMap").onclick = () => { closeSheet(); openMap(fl.id, id); };
     const got = state.stamps[id];
     $("sAction").innerHTML = got
       ? `<p class="gotline">${fmtTime(got)} 朱印済み</p>`
@@ -252,9 +259,115 @@
     }
   };
 
+  /* ---------- 会場地図 ---------- */
+  const FLOORS = window.RALLY_MAP || [];
+  const floorOf = (id) => FLOORS.find((f) => f.pins.some((p) => p.id === id));
+  let curFloor = FLOORS[0]?.id;
+  let focusId = null;
+
+  function roomSVG(r) {
+    const cls = `rm rm-${r.kind}`;
+    let s = `<rect class="${cls}" x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}"/>`;
+    if (r.kind === "void") s += `<path class="rm-x" d="M${r.x} ${r.y}L${r.x + r.w} ${r.y + r.h}M${r.x + r.w} ${r.y}L${r.x} ${r.y + r.h}"/>`;
+    if (r.kind === "stair") {
+      const n = 5;
+      for (let i = 1; i < n; i++) {
+        s += r.w > r.h
+          ? `<line class="rm-step" x1="${r.x + (r.w * i) / n}" y1="${r.y}" x2="${r.x + (r.w * i) / n}" y2="${r.y + r.h}"/>`
+          : `<line class="rm-step" x1="${r.x}" y1="${r.y + (r.h * i) / n}" x2="${r.x + r.w}" y2="${r.y + (r.h * i) / n}"/>`;
+      }
+    }
+    return s;
+  }
+
+  function renderMap() {
+    const f = FLOORS.find((x) => x.id === curFloor);
+    if (!f) return;
+    const [vx, vy, vw, vh] = f.vb;
+    const u = vw / 340; // 画面上の1px が地図座標でいくつか（ピンの大きさを全フロアでそろえる）
+    const svg = $("mapSvg");
+    svg.setAttribute("viewBox", `${vx} ${vy} ${vw} ${vh}`);
+    let s = f.rooms.map(roomSVG).join("");
+    s += f.rooms
+      .filter((r) => r.label)
+      .map((r) => `<text class="rm-label" x="${r.lx}" y="${r.ly}" font-size="${11 * u}">${esc(r.label)}</text>`)
+      .join("");
+    s += f.marks
+      .map((m) => `<g class="mk-${m.kind}"><path d="M${m.x - 9 * u} ${m.y - 6 * u}h${18 * u}l${-9 * u} ${10 * u}z"/><text x="${m.x}" y="${m.y - 10 * u}" font-size="${11 * u}">${esc(m.text)}</text></g>`)
+      .join("");
+    const r = 15 * u;
+    s += f.pins
+      .map((p) => {
+        const lp = p.lp || "b";
+        const tx = lp === "l" ? p.x - r - 4 * u : lp === "r" ? p.x + r + 4 * u : p.x;
+        const ty = lp === "b" ? p.y + r + 12 * u : lp === "t" ? p.y - r - 5 * u : p.y + 4 * u;
+        const anchor = lp === "l" ? "end" : lp === "r" ? "start" : "middle";
+        if (p.special) {
+          return `<g class="pin-sp"><rect x="${p.x - 6 * u}" y="${p.y - 6 * u}" width="${12 * u}" height="${12 * u}"/>
+            <text x="${tx}" y="${ty}" text-anchor="${anchor}" font-size="${10.5 * u}">${esc(p.special)}</text></g>`;
+        }
+        const i = booths.findIndex((b) => b.id === p.id);
+        const b = booths[i];
+        if (!b) return "";
+        const got = state.stamps[b.id];
+        return `<g class="pin ${got ? "got" : ""} ${focusId === b.id ? "focus" : ""}" data-pin="${b.id}">
+          <circle class="hit" cx="${p.x}" cy="${p.y}" r="${r * 1.5}"/>
+          ${focusId === b.id ? `<circle class="ring" cx="${p.x}" cy="${p.y}" r="${r * 1.35}"/>` : ""}
+          <circle class="dot" cx="${p.x}" cy="${p.y}" r="${r}"/>
+          ${got ? `<circle class="dot2" cx="${p.x}" cy="${p.y}" r="${r * 0.8}"/>` : ""}
+          <text class="num" x="${p.x}" y="${p.y + 4 * u}" font-size="${(KANJI[i].length > 1 ? 10 : 12.5) * u}">${KANJI[i]}</text>
+          <text class="nm" x="${tx}" y="${ty}" text-anchor="${anchor}" font-size="${10 * u}">${esc(p.t || b.stamp || short(b.shop))}${b.when ? "（午前のみ）" : ""}</text>
+        </g>`;
+      })
+      .join("");
+    svg.innerHTML = s;
+
+    // このフロアのブース一覧（地図の下）
+    $("floorList").innerHTML = f.pins
+      .filter((p) => p.id)
+      .map((p) => {
+        const i = booths.findIndex((b) => b.id === p.id);
+        const b = booths[i];
+        const got = state.stamps[b.id];
+        return `<li><button data-pin="${b.id}" class="${got ? "got" : ""}">
+          <span class="fl-no">${KANJI[i]}</span>
+          <span class="fl-txt"><b>${esc(b.shop)}</b><small>${esc(b.menu)}${b.when ? `｜${esc(b.when)}` : ""}</small></span>
+          <span class="fl-st">${got ? "朱印済" : "まだ"}</span>
+        </button></li>`;
+      })
+      .join("");
+
+    $("floorTabs").innerHTML = FLOORS.map((x) => {
+      const left = x.pins.filter((p) => p.id && booths.some((b) => b.id === p.id) && !state.stamps[p.id]).length;
+      return `<button class="${x.id === curFloor ? "on" : ""}" data-floor="${x.id}">${esc(x.name)}<small>${left ? `あと${left}` : "済"}</small></button>`;
+    }).join("");
+  }
+
+  function openMap(floorId, focus) {
+    load();
+    curFloor = floorId || curFloor;
+    focusId = focus || null;
+    $("mapPlace").textContent = R.eventPlace || "";
+    renderMap();
+    $("map").hidden = false;
+  }
+  const closeMap = () => { $("map").hidden = true; focusId = null; };
+  $("mapBtn").onclick = () => openMap();
+  $("mapClose").onclick = closeMap;
+  $("mapBack").onclick = closeMap;
+  $("floorTabs").addEventListener("click", (e) => {
+    const t = e.target.closest("[data-floor]");
+    if (t) { curFloor = t.dataset.floor; focusId = null; renderMap(); }
+  });
+  $("map").addEventListener("click", (e) => {
+    const p = e.target.closest("[data-pin]");
+    if (p) openSheet(p.dataset.pin);
+  });
+
   // 別タブで押印したら、このタブの表示も追いつかせる
-  window.addEventListener("storage", (e) => { if (e.key === R.storageKey) { load(); render(); } });
-  document.addEventListener("visibilitychange", () => { if (!document.hidden) { load(); render(); } });
+  const refresh = () => { load(); render(); if (!$("map").hidden) renderMap(); };
+  window.addEventListener("storage", (e) => { if (e.key === R.storageKey) refresh(); });
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) refresh(); });
 
   /* ---------- ページ内QRリーダー（同じタブのまま押印できる） ---------- */
   let scanStream = null, scanRaf = 0;
