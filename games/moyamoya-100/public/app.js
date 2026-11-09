@@ -16,6 +16,14 @@
   const BOOK_URL = "https://www.amazon.co.jp/s?k=" + encodeURIComponent(BOOK_TITLE);
   const HELP_URL = "https://www.mhlw.go.jp/mamorouyokokoro/";
   const HASHTAG = "100通り解消法チャレンジ";
+  const FEEDBACK_FORM = "https://docs.google.com/forms/d/e/1FAIpQLSevp46W3888lt1W6heIodTMTsnKqz4vMoe7wOhDSeivK-6n_Q/viewform";
+  function feedbackURL(mood, result, card) {
+    const q = new URLSearchParams({ usp: "pp_url" });
+    if (mood) q.set("entry.590552963", mood);
+    if (result) q.set("entry.1505988772", result);
+    if (card) q.set("entry.2064988083", card);
+    return `${FEEDBACK_FORM}?${q}`;
+  }
 
   /* ---------- 保存 ---------- */
   const KEY = "moyamoya100:v1";
@@ -563,6 +571,9 @@
       : `モヤモヤ退治100で「${reached}」まで進んだ。${mvp ? `\n頼りにした解消法は「${mvp.c.name}」` : ""}\n#${HASHTAG}`;
     const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(location.href.split("#")[0])}`;
 
+    const foe = E.FOES[run.mood];
+    const formURL = feedbackURL(foe ? foe.name : "", won ? "夜明けまで到達" : `${reached}まで`, mvp ? mvp.c.name : "");
+
     $app.innerHTML = `
       <section class="result">
         ${won ? `
@@ -580,6 +591,7 @@
         </div>
         <div class="stack">
           <button class="btn" data-a="again">もう一度 冒険する</button>
+          <a class="btn sub" href="${esc(formURL)}" target="_blank" rel="noopener">感想を送る（1〜2分）</a>
           <button class="btn sub" data-a="zukan">ずかんを見る（${seenCount()} / 100）</button>
           <a class="btn sub" href="${url}" target="_blank" rel="noopener">Xで シェアする</a>
           <button class="btn sub" data-a="title">タイトルへ</button>
