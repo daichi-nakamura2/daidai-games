@@ -12,8 +12,8 @@
   const esc = (s) => String(s).replace(/[&<>"']/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m]));
   const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
-  const BOOK_TITLE = "生きづらさを解消する方法を100通り試してみた";
-  const BOOK_URL = "https://www.amazon.co.jp/s?k=" + encodeURIComponent(BOOK_TITLE);
+  const BOOK_TITLE = "生きづらさを解消する方法を100通り試してみた。";
+  const BOOK_URL = "https://link.amazon/B08ASRRsu";
   const HELP_URL = "https://www.mhlw.go.jp/mamorouyokokoro/";
   const HASHTAG = "100通り解消法チャレンジ";
   const FEEDBACK_FORM = "https://docs.google.com/forms/d/e/1FAIpQLSevp46W3888lt1W6heIodTMTsnKqz4vMoe7wOhDSeivK-6n_Q/viewform";
