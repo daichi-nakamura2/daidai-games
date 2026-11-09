@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>感謝脳ゲーム マルシェ版 ブース用ポスター</title>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+<style>
+  @page { size: A4; margin: 0; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #888; font-family: "Shippori Mincho B1", "Hiragino Mincho ProN", serif; font-weight: 700; color: #1c2a22; }
+  .sheet {
+    width: 210mm; height: 297mm; margin: 0 auto; padding: 16mm 18mm; background: #f8f1e0;
+    display: flex; flex-direction: column; align-items: center; text-align: center;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  }
+  .band { width: 100%; display: flex; justify-content: space-between; font-size: 13pt; letter-spacing: .2em; padding-bottom: 3mm; border-bottom: .4mm solid #1c2a22; }
+  .kicker { margin: 11mm 0 0; color: #a8302c; font-size: 18pt; letter-spacing: .35em; }
+  h1 { margin: 2mm 0 0; font-size: 62pt; font-weight: 800; letter-spacing: .06em; line-height: 1.15; }
+  .lead { margin: 5mm 0 0; font-size: 19pt; line-height: 1.6; }
+  .qr { margin-top: 9mm; padding: 5mm; background: #fff; border: .6mm solid #1c2a22; box-shadow: 2.5mm 2.5mm 0 #b07a2c; }
+  .qr svg { display: block; width: 84mm; height: 84mm; }
+  .scan { margin: 9mm 0 0; font-size: 22pt; font-weight: 800; color: #a8302c; }
+  .steps { list-style: none; margin: auto 0 0; padding: 0; width: 100%; display: flex; gap: 5mm; }
+  .steps li { flex: 1; padding: 4mm 2mm; background: #1c2a22; color: #f8f1e0; font-size: 13pt; line-height: 1.5; }
+  .steps b { display: block; font-size: 20pt; color: #e0bd7f; }
+  .foot { margin: 5mm 0 0; font-size: 12pt; }
+  @media print { body { background: none; } }
+</style>
+</head>
+<body>
+<div class="sheet">
+  <div class="band"><span>ノザワナマルシェ</span><span>だいだい屋</span></div>
+  <p class="kicker">三分体験</p>
+  <h1>感謝脳ゲーム</h1>
+  <p class="lead">ちょっと困った出来事を、<br>みんなで「ありがとう」に変えよう。</p>
+  <div class="qr" id="qr"></div>
+  <p class="scan">スマホで読むだけ！</p>
+  <ol class="steps">
+    <li><b>書く</b>「おかげで、…」と<br>続きを書く</li>
+    <li><b>選ぶ</b>心がほぐれた答えに<br>投票する</li>
+    <li><b>笑う</b>誰の答えだったか<br>最後に発表</li>
+  </ol>
+  <p class="foot">ひとりでも、お友だちやご家族と一緒でも遊べます</p>
+</div>
+<script>
+  const URL_TO_PLAY = "https://daidai-games.onrender.com/games/kansha-marche/";
+  const q = qrcode(0, "M");
+  q.addData(URL_TO_PLAY);
+  q.make();
+  document.getElementById("qr").innerHTML = q.createSvgTag({ scalable: true, margin: 0 });
+</script>
+</body>
+</html>

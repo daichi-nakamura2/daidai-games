@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>感謝脳ゲーム マルシェ版</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="masthead"><span>ノザワナマルシェ</span><i></i><span>だいだい屋</span></div>
+<p id="conn" class="conn" hidden>つなぎ直しています…</p>
+
+<main>
+  <!-- はじめの画面 -->
+  <section id="s-title" hidden>
+    <div class="hero">
+      <div class="seal">三分<br>体験</div>
+      <p class="kicker">マルシェ版</p>
+      <h1>感謝脳<br>ゲーム</h1>
+      <p class="lead">ちょっと困った出来事を、<br>みんなで「ありがとう」に変えよう。</p>
+    </div>
+    <ol class="steps">
+      <li><b>書く</b>お題に「おかげで、…」と続ける</li>
+      <li><b>選ぶ</b>いちばん心がほぐれた答えに投票</li>
+      <li><b>笑う</b>誰の答えだったか、最後に発表</li>
+    </ol>
+    <form id="join-form" class="panel">
+      <label for="name">おなまえ<small>（空欄ならニックネームをつけます）</small></label>
+      <input id="name" maxlength="10" autocomplete="off" placeholder="例：たろう">
+      <button class="btn" type="submit">席につく</button>
+    </form>
+  </section>
+
+  <!-- 待ち合わせ -->
+  <section id="s-lobby" hidden>
+    <h2 class="center">ただいまの席</h2>
+    <ul id="lobby-players" class="seats"></ul>
+    <p class="note center">一緒に遊ぶ人にもQRを読んでもらいましょう。<br>ひとりでも、お助けキャラと遊べます。</p>
+    <button id="btn-start" class="btn wide" type="button">みんな揃った！はじめる</button>
+  </section>
+
+  <!-- 書く -->
+  <section id="s-write" hidden>
+    <div class="status"><span class="q-no"></span><span class="clock"></span></div>
+    <div class="bar"><i></i></div>
+    <div class="topic"><small>お題</small><p class="topic-text"></p></div>
+    <form id="answer-form" class="panel">
+      <label for="answer">おかげで、</label>
+      <textarea id="answer" maxlength="40" rows="2" placeholder="ここに続きを書く"></textarea>
+      <div class="row">
+        <button id="btn-hint" class="btn-sub" type="button">思いつかない…</button>
+        <span class="count"><span id="count">0</span>/40</span>
+      </div>
+      <p id="write-error" class="error" hidden></p>
+      <button class="btn wide" type="submit">ありがとう！と出す</button>
+      <p class="note">答えは同じ席の人に見えます。お名前や連絡先は書かないでね。</p>
+    </form>
+    <div id="write-done" class="panel center" hidden>
+      <p class="my-answer"></p>
+      <p class="note">みんなの答えを待っています</p>
+    </div>
+    <ul id="write-players" class="chips"></ul>
+  </section>
+
+  <!-- 投票 -->
+  <section id="s-vote" hidden>
+    <div class="status"><span class="q-no"></span><span class="clock"></span></div>
+    <div class="bar"><i></i></div>
+    <div class="topic small"><small>お題</small><p class="topic-text"></p></div>
+    <h2 class="center">いちばん心がほぐれたのは？</h2>
+    <div id="vote-list" class="answers"></div>
+  </section>
+
+  <!-- 結果 -->
+  <section id="s-result" hidden>
+    <div class="status"><span class="q-no"></span><span class="clock"></span></div>
+    <div class="bar"><i></i></div>
+    <div class="topic small"><small>お題</small><p class="topic-text"></p></div>
+    <div id="result-list" class="answers"></div>
+  </section>
+
+  <!-- おしまい -->
+  <section id="s-final" hidden>
+    <h2 class="center final-head">本日の感謝番付</h2>
+    <div id="best" class="best" hidden></div>
+    <ol id="rank-list" class="ranks"></ol>
+    <div id="my-best" class="panel center" hidden></div>
+    <button id="btn-again" class="btn wide" type="button">もう一度あそぶ</button>
+    <p class="note center">ゆっくり遊べる本編は<a href="../kansha-nou/">こちら</a>。<br>だいだい屋のブースで、書籍も販売しています。</p>
+  </section>
+</main>
+
+<div id="react-bar" class="react-bar" hidden></div>
+<div id="floaters" aria-hidden="true"></div>
+<div id="toast" class="toast" role="status" hidden></div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
