@@ -81,7 +81,7 @@
         const got = state.stamps[b.id];
         return `<button class="slot ${got ? "got" : ""} ${fresh === b.id ? "fresh" : ""}" data-id="${b.id}">
           <div class="circle">${got ? hankoHTML(b) : `<span class="ghost">${KANJI[i] || i + 1}</span>`}</div>
-          <div class="slot-name">${esc(b.shop)}</div>
+          <div class="slot-name"><b>${esc(b.tag || b.shop)}</b><small>${esc(b.shop)}</small></div>
         </button>`;
       })
       .join("");
@@ -105,7 +105,7 @@
     $("fxHanko").style.animation = "none";
     void $("fxHanko").offsetWidth;
     $("fxHanko").style.animation = "";
-    $("fxShop").textContent = b.shop;
+    $("fxShop").innerHTML = `${esc(b.tag || b.shop)}<small>${esc(b.shop)}</small>`;
     const after = count();
     const hit = R.rewards.find((r) => before < r.count && after >= r.count);
     $("fxMsg").textContent = already
@@ -159,9 +159,11 @@
     const b = booths[i];
     $("sEmoji").textContent = KANJI[i] || i + 1;
     $("sNo").textContent = `其の${KANJI[i] || i + 1}`;
+    $("sTag").textContent = b.tag || b.shop;
+    $("sMenu").textContent = b.menu;
+    $("sDesc").textContent = b.desc || "";
     $("sShop").textContent = b.shop;
     $("sOwner").textContent = b.owner;
-    $("sMenu").textContent = b.menu;
     $("sWhen").hidden = !b.when;
     $("sWhen").textContent = b.when ? `時間：${b.when}` : "";
     const fl = floorOf(id);
@@ -316,7 +318,7 @@
           <circle class="dot" cx="${p.x}" cy="${p.y}" r="${r}"/>
           ${got ? `<circle class="dot2" cx="${p.x}" cy="${p.y}" r="${r * 0.8}"/>` : ""}
           <text class="num" x="${p.x}" y="${p.y + 4 * u}" font-size="${(KANJI[i].length > 1 ? 10 : 12.5) * u}">${KANJI[i]}</text>
-          <text class="nm" x="${tx}" y="${ty}" text-anchor="${anchor}" font-size="${10 * u}">${esc(p.t || b.stamp || short(b.shop))}${b.when ? "（午前のみ）" : ""}</text>
+          <text class="nm" x="${tx}" y="${ty}" text-anchor="${anchor}" font-size="${10 * u}">${esc(p.t || b.tag || b.stamp || short(b.shop))}${b.when ? "（午前のみ）" : ""}</text>
         </g>`;
       })
       .join("");
@@ -331,7 +333,7 @@
         const got = state.stamps[b.id];
         return `<li><button data-pin="${b.id}" class="${got ? "got" : ""}">
           <span class="fl-no">${KANJI[i]}</span>
-          <span class="fl-txt"><b>${esc(b.shop)}</b><small>${esc(b.menu)}${b.when ? `｜${esc(b.when)}` : ""}</small></span>
+          <span class="fl-txt"><b>${esc(b.tag || b.shop)}</b><em>${esc(b.menu)}</em><small>${esc(b.shop)}${b.when ? `｜${esc(b.when)}` : ""}</small></span>
           <span class="fl-st">${got ? "朱印済" : "まだ"}</span>
         </button></li>`;
       })
