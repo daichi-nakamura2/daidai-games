@@ -14,6 +14,8 @@
       .head { background: #1c2a22; color: #f4ead2; border-radius: 0; letter-spacing: 0.1em; padding: 2mm 5mm; font-weight: 900; font-size: 13pt; }
       .no { font-size: 11pt; margin-top: 2mm; }
       .shop { font-weight: 900; font-size: 14pt; line-height: 1.3; }
+      .shop .tag { display: block; font-size: 20pt; color: #a8302c; }
+      .shop small { display: block; font-size: 10pt; font-weight: 700; color: #555; margin-top: 1mm; }
       .qr svg { width: 58mm; height: 58mm; display: block; }
       .code { font-size: 10pt; }
       .code b { color: #a8302c; font-size: 22pt; letter-spacing: 0.25em; display: block; }
@@ -61,7 +63,7 @@
         cards.push(`<div class="poster">
           <div class="head">${R.eventName} スタンプ帖</div>
           <div class="no">其の${["一","二","三","四","五","六","七","八","九","十","十一","十二","十三","十四","十五","十六","十七","十八","十九","二十"][i] ?? i + 1}</div>
-          <div class="shop">${b.shop}</div>
+          <div class="shop"><span class="tag">${b.tag || b.shop}</span><small>${b.shop}</small></div>
           <div class="qr">${qrSvg(url)}</div>
           <div class="code">読めないときの合言葉<b>${CODES[b.id]}</b></div>
           <div class="guide">スタンプ帖の「QRを読んで押印」ボタンで読むと朱印が押されます</div>

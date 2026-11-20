@@ -163,7 +163,7 @@
     $("sMenu").textContent = b.menu;
     $("sDesc").textContent = b.desc || "";
     $("sShop").textContent = b.shop;
-    $("sOwner").textContent = b.owner;
+    $("sOwner").textContent = b.owner === b.shop ? "" : b.owner;
     $("sWhen").hidden = !b.when;
     $("sWhen").textContent = b.when ? `時間：${b.when}` : "";
     const fl = floorOf(id);
