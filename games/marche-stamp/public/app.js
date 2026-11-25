@@ -163,7 +163,8 @@
     $("sMenu").textContent = b.menu;
     $("sDesc").textContent = b.desc || "";
     $("sShop").textContent = b.shop;
-    $("sOwner").textContent = b.owner === b.shop ? "" : b.owner;
+    // 屋号に名前が入っているとき（「つなば なかざわりえ」など）は名前を重ねて出さない
+    $("sOwner").textContent = b.shop.replace(/\s/g, "").includes(b.owner.replace(/\s/g, "")) ? "" : b.owner;
     $("sWhen").hidden = !b.when;
     $("sWhen").textContent = b.when ? `時間：${b.when}` : "";
     const fl = floorOf(id);
